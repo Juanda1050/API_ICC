@@ -1,7 +1,7 @@
 import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import dotenv from "dotenv";
-import { authenticate } from "./middleware/auth";
+import { authenticate, authorize } from "./middleware/auth";
 
 dotenv.config();
 
@@ -29,6 +29,7 @@ app.use(
 app.use(
   "/management",
   authenticate,
+  authorize(["admin", "coordinator"]),
   createProxyMiddleware({
     target: process.env.MANAGEMENT_SERVICE_URL,
     changeOrigin: true,
