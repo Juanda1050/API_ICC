@@ -7,7 +7,6 @@ export function validate(
 ) {
   return (req: Request, res: Response, next: NextFunction): void => {
     try {
-      // Usar safeParse para mejor control de errores
       const dataToValidate = req[target];
       const result = schema.safeParse(dataToValidate);
 
