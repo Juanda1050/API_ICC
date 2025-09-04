@@ -9,6 +9,20 @@ export async function registerUser(
   password: string,
   telephone?: string
 ) {
+  const { data: existingUser } = await supabase
+    .from("users")
+    .select("email, telephone")
+    .or(`email.eq.${email}${telephone ? `,telephone.eq.${telephone}` : ""}`);
+
+  if (existingUser && existingUser.length > 0) {
+    const emailExists = existingUser.some((u) => u.email === email);
+    const phoneExists = existingUser.some((u) => u.telephone === telephone);
+
+    if (emailExists) throw new Error("A user with this email already exists");
+    if (phoneExists)
+      throw new Error("A user with this telephone already exists");
+  }
+
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const { data: defaultRole } = await supabase
@@ -116,7 +130,7 @@ export async function logoutUser(userId: string) {
     .from("users")
     .update({ token: null, refresh_token: null })
     .eq("id", userId);
-    
+
   if (error) throw new Error("Logout failed");
   return true;
 }
