@@ -1,4 +1,3 @@
-import bycrypt from "bcrypt";
 import { supabase } from "../db";
 
 export async function seedRoles() {

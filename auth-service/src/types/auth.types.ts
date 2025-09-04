@@ -2,7 +2,7 @@ export interface User {
   id: string;
   email: string;
   telephone?: string;
-  passwordHash: string;
+  password_hash: string;
   token?: string;
   refresh_token?: string;
   active: boolean;
@@ -21,6 +21,6 @@ export interface Role {
   deleted_at?: string;
 }
 
-export interface UserWithRole extends Omit<User, "passwordHash"> {
+export interface UserWithRole extends Omit<User, "password_hash"> {
   role: Role;
 }

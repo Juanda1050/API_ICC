@@ -2,9 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { error } from "../utils/response";
 
-const JWT_SECRET = process.env.JWT_SECRET || "";
+const JWT_SECRET = process.env.JWT_SECRET as string;
 
-export function authenticate(
+export function authenticateMiddleware(
   req: Request,
   res: Response,
   next: NextFunction
@@ -19,8 +19,8 @@ export function authenticate(
   const token = authHeader.split(" ")[1];
 
   try {
-    const decoced = jwt.verify(token, JWT_SECRET);
-    (req as any).user = decoced;
+    const decoded = jwt.verify(token, JWT_SECRET);
+    (req as any).user = decoded;
     next();
   } catch (err) {
     error(res, "Invalid or expired token", 401);

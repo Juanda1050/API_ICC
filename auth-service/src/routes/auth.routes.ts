@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate } from "../middleware/auth";
+import { authenticateMiddleware } from "../middleware/authenticate";
 import { validateBody } from "../middleware/validate";
 import {
   login,
@@ -31,6 +31,6 @@ router.get("/health", healthCheck);
 router.post("/register", validateBody(registerSchema), register);
 router.post("/login", validateBody(loginSchema), login);
 router.post("/refresh", validateBody(refreshSchema), refresh);
-router.post("/logout", authenticate, logout);
+router.post("/logout", authenticateMiddleware, logout);
 
 export default router;

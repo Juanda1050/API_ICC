@@ -24,7 +24,7 @@ export async function registerUser(
     .insert([
       {
         email,
-        passwordHash: hashedPassword,
+        password_hash: hashedPassword,
         telephone,
         role_id: defaultRole.id,
         active: true,
@@ -49,7 +49,7 @@ export async function loginUser(email: string, password: string) {
 
   if (error || !user) throw new Error("Invalid email or password");
 
-  const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+  const passwordMatch = await bcrypt.compare(password, user.password_hash);
   if (!passwordMatch) throw new Error("Invalid email or password");
 
   const accessToken = jwt.sign(
