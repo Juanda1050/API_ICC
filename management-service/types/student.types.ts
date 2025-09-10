@@ -17,16 +17,15 @@ export interface CSVStudent {
   name: string;
   middle_name?: string;
   paternal_surname: string;
-  maternal_surname?: string;
+  maternal_surname: string;
   list_number: number;
   group: string;
   grade: string;
 }
 
 export interface StudentFilter {
-  name?: string;
-  paternal_surname?: string;
-  maternal_surname?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
   list_number?: number;
   group?: string;
   grade?: string;
