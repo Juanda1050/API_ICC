@@ -9,11 +9,3 @@ export interface Teacher {
   created_by: string;
   updated_by: string;
 }
-
-export interface Coordinator {
-  id: string;
-  name: string;
-  email?: string;
-  roleId?: string;
-  roleName: string;
-}
