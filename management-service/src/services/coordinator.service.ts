@@ -1,5 +1,6 @@
-import { supabase } from "../../auth-service/src/db";
+import { supabase } from "../db";
 import { Coordinator } from "../types/coordinator.types";
+
 
 export async function getCoordinators(): Promise<Coordinator[]> {
   const { data: coordinators, error } = await supabase

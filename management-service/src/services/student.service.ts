@@ -1,7 +1,7 @@
 import { Student, StudentFilter } from "../types/student.types";
-import { supabase } from "../../auth-service/src/db";
 import { Teacher } from "../types/teacher.types";
 import { Coordinator } from "../types/coordinator.types";
+import { supabase } from "../db";
 
 export async function createStudents(
   studentData: Omit<Student, "id" | "created_at" | "updated_at">[]

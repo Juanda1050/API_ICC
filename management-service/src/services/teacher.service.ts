@@ -1,5 +1,5 @@
-import { supabase } from "../../auth-service/src/db";
 import { Teacher } from "../types/teacher.types";
+import { supabase } from "../db";
 
 export async function createTeacher(
   teacherData: Omit<Teacher, "id" | "created_at" | "updated_at">
