@@ -26,7 +26,6 @@ export interface CSVStudent {
 export interface StudentFilter {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
-  list_number?: number;
   group?: string;
   grade?: string;
 }

@@ -3,7 +3,7 @@ import { Teacher } from "../types/teacher.types";
 import { Coordinator } from "../types/coordinator.types";
 import { supabase } from "../db";
 
-export async function createStudents(
+export async function createStudentsService(
   studentData: Omit<Student, "id" | "created_at" | "updated_at">[]
 ): Promise<Student[]> {
   const { data: students, error } = await supabase
@@ -15,7 +15,7 @@ export async function createStudents(
   return students;
 }
 
-export async function getStudents(filters: StudentFilter = {}): Promise<{
+export async function getStudentsService(filters: StudentFilter = {}): Promise<{
   students: Student[];
   teachers: Teacher[];
   coordinator: Coordinator;
@@ -68,7 +68,24 @@ export async function getStudents(filters: StudentFilter = {}): Promise<{
   };
 }
 
-export async function getStudentById(id: string): Promise<Student | null> {
+export async function getStudentsByGroupAndGradeService(
+  group: string,
+  grade: string
+) {
+  const { data: students, error } = await supabase
+    .from("students")
+    .select("*")
+    .eq("group", group)
+    .eq("grade", grade)
+    .order("list_number", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return students;
+}
+
+export async function getStudentByIdService(
+  id: string
+): Promise<Student | null> {
   const { data: student, error } = await supabase
     .from("students")
     .select("*")
@@ -79,7 +96,7 @@ export async function getStudentById(id: string): Promise<Student | null> {
   return student;
 }
 
-export async function updateStudent(
+export async function updateStudentService(
   id: string,
   updates: Partial<Omit<Student, "id" | "created_at" | "created_by">>
 ): Promise<Student> {
@@ -94,7 +111,7 @@ export async function updateStudent(
   return student;
 }
 
-export async function deleteStudent(id: string): Promise<void> {
+export async function deleteStudentService(id: string): Promise<void> {
   const { error } = await supabase.from("students").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }
