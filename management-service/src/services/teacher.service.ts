@@ -1,7 +1,7 @@
 import { Teacher } from "../types/teacher.types";
 import { supabase } from "../db";
 
-export async function createTeacher(
+export async function createTeacherService(
   teacherData: Omit<Teacher, "id" | "created_at" | "updated_at">
 ): Promise<Teacher> {
   const { data: teacher, error } = await supabase
@@ -15,14 +15,14 @@ export async function createTeacher(
   return teacher;
 }
 
-export async function getTeachers(): Promise<Teacher[]> {
+export async function getTeachersService(): Promise<Teacher[]> {
   const { data: teachers, error } = await supabase.from("teachers").select("*");
 
   if (error) throw new Error(error.message);
   return teachers;
 }
 
-export async function getTeacherById(
+export async function getTeacherByIdService(
   teacherId: string
 ): Promise<Teacher | null> {
   const { data: teacher, error } = await supabase
@@ -35,7 +35,7 @@ export async function getTeacherById(
   return teacher;
 }
 
-export async function updateTeacher(
+export async function updateTeacherService(
   teacherId: string,
   updateData: Partial<Omit<Teacher, "id" | "created_at" | "updated_at">>
 ): Promise<Teacher> {
@@ -50,7 +50,7 @@ export async function updateTeacher(
   return teacher;
 }
 
-export async function deleteTeacher(teacherId: string): Promise<void> {
+export async function deleteTeacherService(teacherId: string): Promise<void> {
   const { error } = await supabase
     .from("teachers")
     .delete()
