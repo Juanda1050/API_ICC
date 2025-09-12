@@ -7,7 +7,7 @@ import authRouter from "./routes/auth.routes";
 import { securityMiddleware } from "./middleware/security";
 import { loggerMiddleware } from "./middleware/logger";
 import { notFoundHandler } from "./middleware/notFound";
-import { errorHandler } from "./middleware/errorHandler";
+import { errorHandler } from "./middleware/error";
 import userRouter from "./routes/user.routes";
 
 const app: Application = express();
