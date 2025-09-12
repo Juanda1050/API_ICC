@@ -100,6 +100,10 @@ export async function updateStudentService(
   id: string,
   updates: Partial<Omit<Student, "id" | "created_at" | "created_by">>
 ): Promise<Student> {
+  if (Object.keys(updates).length === 0) {
+    throw new Error("No updates provided");
+  }
+
   const { data: student, error } = await supabase
     .from("students")
     .update(updates)

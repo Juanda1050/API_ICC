@@ -1,8 +1,7 @@
 import { supabase } from "../db";
 import { Coordinator } from "../types/coordinator.types";
 
-
-export async function getCoordinators(): Promise<Coordinator[]> {
+export async function getCoordinatorsService(): Promise<Coordinator[]> {
   const { data: coordinators, error } = await supabase
     .from("users")
     .select("id, name, roles(id, name)")
@@ -21,4 +20,24 @@ export async function getCoordinators(): Promise<Coordinator[]> {
         }
       : undefined,
   }));
+}
+
+export async function updateCoordinatorService(
+  id: string,
+  updates: Partial<Pick<Coordinator, "email" | "telephone" | "role_id">>
+): Promise<Coordinator> {
+  if (Object.keys(updates).length === 0) {
+    throw new Error("No updates provided");
+  }
+
+  const { data: coordinator, error } = await supabase
+    .from("users")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  if (!coordinator) throw new Error("Coordinator not found");
+  return coordinator;
 }

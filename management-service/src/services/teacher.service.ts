@@ -37,11 +37,15 @@ export async function getTeacherByIdService(
 
 export async function updateTeacherService(
   teacherId: string,
-  updateData: Partial<Omit<Teacher, "id" | "created_at" | "updated_at">>
+  updates: Partial<Omit<Teacher, "id" | "created_at" | "updated_at">>
 ): Promise<Teacher> {
+  if (Object.keys(updates).length === 0) {
+    throw new Error("No updates provided");
+  }
+
   const { data: teacher, error } = await supabase
     .from("teachers")
-    .update(updateData)
+    .update(updates)
     .eq("id", teacherId)
     .select()
     .single();
