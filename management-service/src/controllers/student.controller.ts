@@ -78,11 +78,11 @@ export async function createStudentsFromFile(req: Request, res: Response) {
 export async function getStudents(req: Request, res: Response) {
   try {
     const filter: SchoolGroupFilter = {
-      schoolGroup_id: req.query.schoolGroup_id
-        ? parseInt(req.query.schoolGroup_id as string, 10)
+      schoolGroup_id: req.body.schoolGroup_id
+        ? parseInt(req.body.schoolGroup_id as string, 10)
         : undefined,
-      sortBy: req.query.sortBy as "list_number",
-      sortOrder: req.query.sortOrder as "asc" | "desc",
+      sortBy: (req.body.sortBy as "list_number") ?? "list_number",
+      sortOrder: (req.body.sortOrder as "asc" | "desc") ?? "asc",
     };
 
     const studentList = await getSchoolGroupData(filter);

@@ -68,6 +68,8 @@ export async function getSchoolGroupData(
       ascending: filter.sortOrder === "asc",
     });
 
+    console.log(filter)
+
   if (errorStudents) throw new Error(errorStudents.message);
 
   const { data: teachersData, error: errorTeachers } = await supabase
@@ -87,7 +89,7 @@ export async function getSchoolGroupData(
 
   const { data: group, error: errorGroup } = await supabase
     .from("schoolGroups")
-    .select("id, school_id, school:schools (id, name)")
+    .select("id, school_id, school:schools (id, schoolName)")
     .eq("id", filter.schoolGroup_id)
     .single();
 

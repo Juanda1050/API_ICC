@@ -146,8 +146,7 @@ function drawTicket(
     x + 15,
     y + height - 50,
     width / 2 - 30,
-    "Maestro",
-    false,
+    "Padre/Tutor",
     colors
   );
   drawSignature(
@@ -155,8 +154,7 @@ function drawTicket(
     midX + 15,
     y + height - 25,
     width / 2 - 30,
-    "Padre/Tutor",
-    true,
+    "Recibe",
     colors
   );
 }
@@ -186,7 +184,7 @@ function drawHeader(
     .fillColor("#000000")
     .font("Helvetica-Bold")
     .fontSize(centerFontSize)
-    .text("Fiesta Graduación", x, centerY - centerOffset + 1, {
+    .text("Fiesta de Graduación", x, centerY - centerOffset + 1, {
       width,
       align: "center",
     });
@@ -194,7 +192,7 @@ function drawHeader(
     .fillColor("#ffffff")
     .font("Helvetica-Bold")
     .fontSize(centerFontSize)
-    .text("Fiesta Graduación", x, centerY - centerOffset, {
+    .text("Fiesta de Graduación", x, centerY - centerOffset, {
       width,
       align: "center",
     });
@@ -258,7 +256,7 @@ function drawStudentInfo(
       .fillColor(colors.dark)
       .fontSize(11)
       .font("Helvetica-Bold")
-      .text("Fiesta de Graduación de Primaria Generación 2019 - 2025", x, y, {
+      .text("Fiesta de Graduación de Primaria Generación 2020 - 2026", x, y, {
         width,
         align: "center",
       });
@@ -296,7 +294,7 @@ function drawEventInfo(
     doc
       .font("Helvetica-Bold")
       .fillColor(colors.dark)
-      .text("Generación 2019 - 2025", x, cy);
+      .text("Generación 2020 - 2026", x, cy);
     cy += lineHeight;
 
     doc
@@ -324,7 +322,7 @@ function drawEventInfo(
     doc
       .font("Helvetica")
       .fillColor(colors.text)
-      .text("La cantidad de: ____________", x, cy);
+      .text("La cantidad de: ____________________", x, cy);
     cy += lineHeight;
 
     doc
@@ -338,7 +336,7 @@ function drawEventInfo(
     doc
       .font("Helvetica-Bold")
       .fillColor(colors.dark)
-      .text("Generación 2019-2025", x, cy);
+      .text("Generación 2020 - 2026", x, cy);
     cy += lineHeight;
 
     doc
@@ -354,20 +352,11 @@ function drawSignature(
   y: number,
   width: number,
   label: string,
-  isTutor: boolean = false,
   colors: typeof defaultColors
 ) {
-  if (!isTutor) {
-    doc
-      .fontSize(9)
-      .font("Helvetica-Bold")
-      .fillColor(colors.accent)
-      .text(`${label}: ____________________`, x, y, { width });
-  } else {
-    doc
-      .fontSize(9)
-      .font("Helvetica-Bold")
-      .fillColor(colors.accent)
-      .text("Recibe: ____________________", x, y, { width });
-  }
+  doc
+    .fontSize(9)
+    .font("Helvetica-Bold")
+    .fillColor(colors.accent)
+    .text(`${label}: ____________________`, x, y, { width });
 }
