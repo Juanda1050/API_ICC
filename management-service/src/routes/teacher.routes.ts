@@ -10,6 +10,7 @@ import {
   updateTeacher,
 } from "../controllers/teacher.controller";
 import { validateBody } from "../middleware/validate";
+import { roles } from "../utils/dictionary";
 
 const teacherRouter = Router();
 
@@ -27,7 +28,7 @@ const updateTeacherSchema = z.object({
 
 const adminAuth = [
   authenticateMiddleware,
-  authorizeMiddleware(["admin", "coordinator_general"]),
+  authorizeMiddleware([roles.admin.id, roles.coordinator_general.id]),
 ];
 
 teacherRouter.get("/", ...adminAuth, getTeachers);

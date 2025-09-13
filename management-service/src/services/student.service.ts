@@ -22,25 +22,35 @@ export async function findSchoolGroupIdService(
   group: string,
   grade: string
 ): Promise<number | null> {
+  const { data: school, error: schoolError } = await supabase
+    .from("schools")
+    .select("id")
+    .ilike("schoolName", schoolName.trim())
+    .maybeSingle();
+
+  if (schoolError) {
+    console.error(schoolError);
+    return null;
+  }
+
+  if (!school) {
+    console.warn(`No school found for name=${schoolName}`);
+    return null;
+  }
+
   const { data, error } = await supabase
     .from("schoolGroups")
-    .select(
-      `
-      id,
-      school:schools!inner(name)
-    `
-    )
+    .select("id")
     .eq("group", group)
     .eq("grade", grade)
-    .eq("schools.name", schoolName)
-    .single();
+    .eq("school_id", school.id)
+    .maybeSingle();
 
   if (error) {
     console.error(`Error finding schoolGroup: ${error.message}`);
     return null;
   }
-
-  return data?.id || null;
+  return data?.id ?? null;
 }
 
 export async function getSchoolGroupData(

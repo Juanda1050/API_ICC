@@ -49,32 +49,35 @@ export async function parseExcel(filepath: string): Promise<CSVStudent[]> {
 
     worksheet.eachRow((row, rowNumber) => {
       if (rowNumber === 1) return;
+
       const [
+        ,
+        list_number,
         name,
         paternal_surname,
         maternal_surname,
-        list_number,
+        school,
         group,
         grade,
-        school,
       ] = row.values as Array<string | number | undefined>;
+
       if (
-        typeof name === "string" &&
-        typeof paternal_surname === "string" &&
-        typeof maternal_surname === "string" &&
+        name &&
+        paternal_surname &&
+        maternal_surname &&
         typeof list_number === "number" &&
-        typeof group === "string" &&
-        typeof grade === "string" &&
-        typeof school === "string"
+        group &&
+        grade &&
+        school
       ) {
         students.push({
-          name,
-          paternal_surname,
-          maternal_surname,
-          list_number,
-          group,
-          grade,
-          school,
+          name: String(name),
+          paternal_surname: String(paternal_surname),
+          maternal_surname: String(maternal_surname),
+          list_number: Number(list_number),
+          group: String(group),
+          grade: String(grade),
+          school: String(school),
         });
       }
     });

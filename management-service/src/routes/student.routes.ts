@@ -1,6 +1,4 @@
 import { Router } from "express";
-import multer from "multer";
-import path from "path";
 import z from "zod/v3";
 import { authenticateMiddleware } from "../middleware/authenticate";
 import { authorizeMiddleware } from "../middleware/authorize";
@@ -14,38 +12,10 @@ import {
   getStudents,
   updateStudent,
 } from "../controllers/student.controller";
+import { roles } from "../utils/dictionary";
+import { upload } from "../middleware/upload";
 
 const studentRouter = Router();
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
-    );
-  },
-});
-
-const upload = multer({
-  storage: storage,
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = [".csv", ".xlsx", ".xls"];
-    const fileExtension = path.extname(file.originalname).toLowerCase();
-
-    if (allowedTypes.includes(fileExtension)) {
-      cb(null, true);
-    } else {
-      cb(new Error("Invalid file type. Only CSV and Excel files are allowed."));
-    }
-  },
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
-  },
-});
 
 const createStudentSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -78,7 +48,11 @@ const generateTicketsSchema = z.object({
 
 const adminAuth = [
   authenticateMiddleware,
-  authorizeMiddleware(["admin", "coordinator_general", "coordinator"]),
+  authorizeMiddleware([
+    roles.admin.id,
+    roles.coordinator_general.id,
+    roles.coordinator.id,
+  ]),
 ];
 
 studentRouter.get(

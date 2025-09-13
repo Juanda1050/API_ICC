@@ -7,6 +7,7 @@ import {
 } from "../controllers/coordinator.controller";
 import z from "zod/v3";
 import { validateBody } from "../middleware/validate";
+import { roles } from "../utils/dictionary";
 
 const coordinatorRouter = Router();
 
@@ -18,7 +19,7 @@ const updateCoordinatorSchema = z.object({
 
 const adminAuth = [
   authenticateMiddleware,
-  authorizeMiddleware(["admin", "coordinator_general"]),
+  authorizeMiddleware([roles.admin.id, roles.coordinator_general.id]),
 ];
 
 coordinatorRouter.get("/", ...adminAuth, getCoordinators);
