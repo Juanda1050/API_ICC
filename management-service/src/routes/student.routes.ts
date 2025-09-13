@@ -2,7 +2,7 @@ import { Router } from "express";
 import z from "zod/v3";
 import { authenticateMiddleware } from "../middleware/authenticate";
 import { authorizeMiddleware } from "../middleware/authorize";
-import { validateBody, validateQuery } from "../middleware/validate";
+import { validateBody, validateParams, validateQuery } from "../middleware/validate";
 import {
   createStudentsFromBody,
   createStudentsFromFile,
@@ -43,7 +43,7 @@ const studentFiltersSchema = z.object({
 });
 
 const generateTicketsSchema = z.object({
-  schoolGroup_id: z.number().min(1, "School group is required"),
+  schoolGroupId: z.string().min(1, "School group is required"),
 });
 
 const adminAuth = [
@@ -75,9 +75,9 @@ studentRouter.post(
   createStudentsFromFile
 );
 studentRouter.post(
-  "/tickets",
+  "/tickets/:schoolGroupId",
   ...adminAuth,
-  validateBody(generateTicketsSchema),
+  validateParams(generateTicketsSchema),
   generateStudentTickets
 );
 studentRouter.put(

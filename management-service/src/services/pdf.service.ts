@@ -1,5 +1,15 @@
 import PDFDocument from "pdfkit";
 import { Student } from "../types/student.types";
+import { defaultColors, groupColors } from "../utils/colors";
+
+const COLORS = {
+  main: "#212F84",
+  accent: "#3646b3",
+  soft: "#facc15",
+  dark: "#111827",
+  text: "#374151",
+  bg: "#f3f4f6",
+};
 
 export async function generateGroupTickets(
   students: Student[],
@@ -9,17 +19,17 @@ export async function generateGroupTickets(
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({
-        size: "A4",
-        margins: { top: 15, left: 15, right: 15, bottom: 15 },
+        size: "Letter",
+        margins: { top: 15, left: 20, right: 20, bottom: 15 },
       });
 
       const buffers: Buffer[] = [];
       doc.on("data", (chunk) => buffers.push(chunk));
       doc.on("end", () => resolve(Buffer.concat(buffers)));
 
-      const ticketsPerRow = 2;
+      const ticketsPerRow = 1;
       const ticketsPerColumn = 3;
-      const ticketWidth = (doc.page.width - 45) / ticketsPerRow;
+      const ticketWidth = (doc.page.width - 60) / ticketsPerRow;
       const ticketHeight = (doc.page.height - 60) / ticketsPerColumn;
 
       let count = 0;
@@ -28,28 +38,22 @@ export async function generateGroupTickets(
         const row = Math.floor(count / ticketsPerRow) % ticketsPerColumn;
         const col = count % ticketsPerRow;
 
-        const x = 20 + col * ticketWidth;
-        const y = 20 + row * ticketHeight;
-        drawTicketBackground(doc, x, y, ticketWidth - 10, ticketHeight - 10);
-        drawModernHeader(doc, x, y, ticketWidth - 10, grade, group);
-        drawListNumberBox(
+        const x = 30 + col * ticketWidth;
+        const y = 30 + row * ticketHeight;
+
+        drawTicket(
           doc,
-          x + ticketWidth - 60,
-          y + 8,
-          student.list_number
-        );
-        draw3DStudentName(doc, x + 15, y + 45, student.name, ticketWidth - 30);
-        drawEventInfo(doc, x + 15, y + 70, ticketWidth - 30);
-        drawSignatureFields(
-          doc,
-          x + 15,
-          y + ticketHeight - 60,
-          ticketWidth - 30
+          x,
+          y,
+          ticketWidth - 10,
+          ticketHeight - 10,
+          grade,
+          group,
+          student
         );
 
         count++;
 
-        // Nueva página cada 6 tickets
         if (
           count % (ticketsPerRow * ticketsPerColumn) === 0 &&
           index < students.length - 1
@@ -65,217 +69,305 @@ export async function generateGroupTickets(
   });
 }
 
-function drawTicketBackground(
+function drawTicket(
   doc: PDFKit.PDFDocument,
   x: number,
   y: number,
   width: number,
-  height: number
-): void {
-  doc.roundedRect(x, y, width, height, 8).fillAndStroke("#f8f9fa", "#e9ecef");
+  height: number,
+  grade: string,
+  group: string,
+  student: Student
+) {
+  const colors = groupColors[`${grade}${group}`] || defaultColors;
 
-  doc.opacity(0.1);
-  drawGraduationCapWatermark(doc, x + width / 2, y + height / 2);
-  doc.opacity(1);
+  doc.roundedRect(x, y, width, height, 12).stroke(colors.accent);
+  doc.roundedRect(x + 3, y + 3, width - 6, height - 6, 10).stroke(colors.main);
 
-  doc.roundedRect(x + 2, y + 2, width - 4, height - 4, 6).stroke("#6c757d");
-}
-
-function drawGraduationCapWatermark(
-  doc: PDFKit.PDFDocument,
-  centerX: number,
-  centerY: number
-): void {
-  doc.rect(centerX - 25, centerY - 10, 50, 20).fill("#dee2e6");
-
-  doc.rect(centerX - 20, centerY - 15, 40, 8).fill("#dee2e6");
-
-  doc.circle(centerX + 25, centerY - 20, 4).fill("#dee2e6");
-
+  const midX = x + width / 2;
   doc
-    .moveTo(centerX + 20, centerY - 15)
-    .lineTo(centerX + 25, centerY - 16)
-    .stroke("#dee2e6");
+    .moveTo(midX, y)
+    .lineTo(midX, y + height)
+    .lineWidth(1)
+    .stroke(COLORS.accent);
+
+  drawHeader(doc, x, y, width / 2, grade, group, student.list_number, colors);
+  drawHeader(
+    doc,
+    midX,
+    y,
+    width / 2,
+    grade,
+    group,
+    student.list_number,
+    colors
+  );
+
+  drawStudentInfo(
+    doc,
+    x + 15,
+    y + 65,
+    width / 2 - 30,
+    `${student.name} ${student.paternal_surname} ${student.maternal_surname}`,
+    true,
+    colors
+  );
+  drawStudentInfo(
+    doc,
+    midX + 15,
+    y + 65,
+    width / 2 - 30,
+    `${student.name} ${student.paternal_surname} ${student.maternal_surname}`,
+    false,
+    colors
+  );
+
+  drawEventInfo(
+    doc,
+    x + 15,
+    y + 110,
+    width / 2 - 30,
+    false,
+    `${student.name} ${student.paternal_surname} ${student.maternal_surname}`,
+    colors
+  );
+  drawEventInfo(
+    doc,
+    midX + 15,
+    y + 105,
+    width / 2 - 30,
+    true,
+    `${student.name} ${student.paternal_surname} ${student.maternal_surname}`,
+    colors
+  );
+
+  drawSignature(
+    doc,
+    x + 15,
+    y + height - 50,
+    width / 2 - 30,
+    "Maestro",
+    false,
+    colors
+  );
+  drawSignature(
+    doc,
+    midX + 15,
+    y + height - 25,
+    width / 2 - 30,
+    "Padre/Tutor",
+    true,
+    colors
+  );
 }
 
-function drawModernHeader(
+function drawHeader(
   doc: PDFKit.PDFDocument,
   x: number,
   y: number,
   width: number,
   grade: string,
-  group: string
-): void {
-  doc.rect(x + 5, y + 5, width - 10, 35).fill("#4f46e5");
-
-  doc.rect(x + 7, y + 7, width - 14, 35).fill("#6366f1");
+  group: string,
+  listNumber: number,
+  colors: typeof defaultColors
+) {
+  const headerHeight = 45;
+  const centerY = y + headerHeight / 2;
 
   doc
-    .fontSize(14)
-    .font("Helvetica-Bold")
-    .fillColor("#1f2937")
-    .text("GRADUACIÓN", x + 17, y + 17, { width: width - 20, align: "center" });
+    .roundedRect(x, y, width, headerHeight, 8)
+    .fill(colors.main)
+    .stroke(colors.dark);
+  doc.roundedRect(x, y, width, 20, 8).fill(colors.accent);
 
+  const centerFontSize = 14;
+  const centerOffset = centerFontSize * 0.35;
+  doc
+    .fillColor("#000000")
+    .font("Helvetica-Bold")
+    .fontSize(centerFontSize)
+    .text("Fiesta Graduación", x, centerY - centerOffset + 1, {
+      width,
+      align: "center",
+    });
   doc
     .fillColor("#ffffff")
-    .text("GRADUACIÓN", x + 15, y + 15, { width: width - 20, align: "center" });
-
-  doc
-    .fontSize(24)
     .font("Helvetica-Bold")
-    .fillColor("#fbbf24")
-    .text(`${grade}${group}`, x + 22, y + 32, {
-      width: width - 30,
-      align: "left",
+    .fontSize(centerFontSize)
+    .text("Fiesta Graduación", x, centerY - centerOffset, {
+      width,
+      align: "center",
     });
 
-  doc.fillColor("#f59e0b").text(`${grade}${group}`, x + 20, y + 30, {
-    width: width - 30,
-    align: "left",
-  });
-}
+  const sideFontSize = 16;
+  const sideOffset = sideFontSize * 0.35;
+  doc
+    .fillColor("#000000")
+    .font("Helvetica-Bold")
+    .fontSize(sideFontSize)
+    .text(`${grade}${group}`, x + 22, centerY - sideOffset + 1);
+  doc
+    .fillColor(colors.soft)
+    .font("Helvetica-Bold")
+    .fontSize(sideFontSize)
+    .text(`${grade}${group}`, x + 20, centerY - sideOffset);
 
-function drawListNumberBox(
-  doc: PDFKit.PDFDocument,
-  x: number,
-  y: number,
-  listNumber: number
-): void {
-  doc.rect(x, y, 40, 28).fillAndStroke("#ef4444", "#dc2626");
-
-  doc.rect(x + 2, y + 2, 40, 28).fillAndStroke("#f87171", "#ef4444");
+  const boxWidth = 45;
+  const boxHeight = 25;
+  const boxY = centerY - boxHeight / 2;
 
   doc
+    .roundedRect(x + width - boxWidth - 10, boxY, boxWidth, boxHeight, 5)
+    .fillAndStroke("#ffffff", colors.dark);
+
+  doc
+    .fillColor(colors.dark)
     .fontSize(8)
-    .font("Helvetica")
-    .fillColor("#ffffff")
-    .text("No.", x + 12, y + 6, { width: 20, align: "center" });
+    .text("No. Lista", x + width - boxWidth - 10, boxY + 3, {
+      width: boxWidth,
+      align: "center",
+    });
 
   doc
-    .fontSize(14)
+    .fillColor(colors.accent)
     .font("Helvetica-Bold")
-    .fillColor("#ffffff")
-    .text(listNumber.toString(), x + 5, y + 16, { width: 30, align: "center" });
+    .fontSize(12)
+    .text(listNumber.toString(), x + width - boxWidth - 10, boxY + 10, {
+      width: boxWidth,
+      align: "center",
+    });
 }
 
-function draw3DStudentName(
+function drawStudentInfo(
   doc: PDFKit.PDFDocument,
   x: number,
   y: number,
-  name: string,
-  width: number
-): void {
-  doc
-    .fontSize(12)
-    .font("Helvetica-Bold")
-    .fillColor("#374151")
-    .text(name, x + 2, y + 2, { width: width, align: "left" });
-
-  doc.fillColor("#111827").text(name, x, y, { width: width, align: "left" });
-
-  doc
-    .moveTo(x, y + 20)
-    .lineTo(x + Math.min(name.length * 6, width), y + 20)
-    .strokeColor("#6366f1")
-    .lineWidth(2)
-    .stroke();
+  width: number,
+  studentName: string,
+  isTutor: boolean = true,
+  colors: typeof defaultColors
+) {
+  if (isTutor)
+    doc
+      .fillColor(colors.dark)
+      .fontSize(13)
+      .font("Helvetica-Bold")
+      .text(studentName, x, y, { width, align: "center" });
+  else
+    doc
+      .fillColor(colors.dark)
+      .fontSize(11)
+      .font("Helvetica-Bold")
+      .text("Fiesta de Graduación de Primaria Generación 2019 - 2025", x, y, {
+        width,
+        align: "center",
+      });
 }
 
 function drawEventInfo(
   doc: PDFKit.PDFDocument,
   x: number,
   y: number,
-  width: number
-): void {
-  const lineHeight = 15;
-  let currentY = y;
+  width: number,
+  isTutor: boolean = false,
+  studentName: string,
+  colors: typeof defaultColors
+) {
+  const lineHeight = 16;
+  let cy = y;
 
-  doc
-    .fontSize(10)
-    .font("Helvetica-Bold")
-    .fillColor("#059669")
-    .text("💰 Cantidad: ", x, currentY);
+  if (!isTutor) {
+    doc
+      .fontSize(10)
+      .font("Helvetica-Bold")
+      .fillColor(colors.accent)
+      .text("Cantidad: ___________", x, cy);
+    cy += lineHeight;
 
-  doc
-    .font("Helvetica")
-    .fillColor("#6b7280")
-    .text("__________________", x + 65, currentY);
+    doc
+      .fontSize(10)
+      .fillColor(colors.accent)
+      .text("Concepto: ", x, cy, { continued: true })
+      .fillColor(colors.text)
+      .font("Helvetica-Bold")
+      .text("Fiesta de Graduación de Primaria");
+    cy += lineHeight;
 
-  currentY += lineHeight;
+    doc
+      .font("Helvetica-Bold")
+      .fillColor(colors.dark)
+      .text("Generación 2019 - 2025", x, cy);
+    cy += lineHeight;
 
-  doc
-    .font("Helvetica-Bold")
-    .fillColor("#7c3aed")
-    .text("🎉 Concepto: ", x, currentY);
+    doc
+      .fillColor(colors.text)
+      .font("Helvetica")
+      .text("San Nicolás de los Garza, N.L. a: ____________", x, cy, {
+        width,
+      });
+  } else {
+    doc
+      .fontSize(10)
+      .font("Helvetica")
+      .fillColor(colors.text)
+      .text("Recibí del padre o tutor: ____________________", x, cy);
+    cy += lineHeight;
 
-  doc
-    .font("Helvetica")
-    .fillColor("#374151")
-    .text("Fiesta de Graduación", x + 65, currentY);
+    doc
+      .font("Helvetica")
+      .fillColor(colors.text)
+      .text("del alumno: ", x, cy, { continued: true })
+      .font("Helvetica-Bold")
+      .text(studentName || "");
+    cy += lineHeight;
 
-  currentY += lineHeight;
+    doc
+      .font("Helvetica")
+      .fillColor(colors.text)
+      .text("La cantidad de: ____________", x, cy);
+    cy += lineHeight;
 
-  doc
-    .font("Helvetica-Bold")
-    .fillColor("#dc2626")
-    .text("🎓 Generación: ", x, currentY);
+    doc
+      .font("Helvetica")
+      .fillColor(colors.text)
+      .text("por concepto de: ", x, cy, { continued: true })
+      .font("Helvetica-Bold")
+      .text("Fiesta de Graduación de Primaria");
+    cy += lineHeight;
 
-  doc
-    .font("Helvetica")
-    .fillColor("#374151")
-    .text("2019-2025", x + 85, currentY);
+    doc
+      .font("Helvetica-Bold")
+      .fillColor(colors.dark)
+      .text("Generación 2019-2025", x, cy);
+    cy += lineHeight;
 
-  currentY += lineHeight;
-
-  doc
-    .font("Helvetica-Bold")
-    .fillColor("#0891b2")
-    .text("📍 San Nicolás de los Garza N.L.", x, currentY);
-
-  currentY += 8;
-  doc
-    .font("Helvetica")
-    .fillColor("#6b7280")
-    .text("Fecha: _______________", x + 10, currentY);
+    doc
+      .font("Helvetica")
+      .fillColor(colors.text)
+      .text("San Nicolás de los Garza, N.L. a: ____________", x, cy);
+  }
 }
 
-function drawSignatureFields(
+function drawSignature(
   doc: PDFKit.PDFDocument,
   x: number,
   y: number,
-  width: number
-): void {
-  const fieldWidth = (width - 10) / 2;
-
-  // Campo padre/tutor
-  doc.rect(x, y, fieldWidth, 25).fillAndStroke("#ecfdf5", "#22c55e");
-
-  doc
-    .fontSize(8)
-    .font("Helvetica-Bold")
-    .fillColor("#166534")
-    .text("👨‍👩‍👧‍👦 Padre/Tutor:", x + 5, y + 3);
-
-  doc
-    .fontSize(9)
-    .font("Helvetica")
-    .fillColor("#6b7280")
-    .text("_________________", x + 5, y + 13);
-
-  // Campo recibe
-  doc
-    .rect(x + fieldWidth + 10, y, fieldWidth, 25)
-    .fillAndStroke("#fef3c7", "#f59e0b");
-
-  doc
-    .fontSize(8)
-    .font("Helvetica-Bold")
-    .fillColor("#92400e")
-    .text("✅ Recibe:", x + fieldWidth + 15, y + 3);
-
-  doc
-    .fontSize(9)
-    .font("Helvetica")
-    .fillColor("#6b7280")
-    .text("_________________", x + fieldWidth + 15, y + 13);
+  width: number,
+  label: string,
+  isTutor: boolean = false,
+  colors: typeof defaultColors
+) {
+  if (!isTutor) {
+    doc
+      .fontSize(9)
+      .font("Helvetica-Bold")
+      .fillColor(colors.accent)
+      .text(`${label}: ____________________`, x, y, { width });
+  } else {
+    doc
+      .fontSize(9)
+      .font("Helvetica-Bold")
+      .fillColor(colors.accent)
+      .text("Recibe: ____________________", x, y, { width });
+  }
 }
