@@ -2,46 +2,72 @@ import { Request, Response } from "express";
 import { error, success } from "../utils/response";
 import { cleanUpFile, parseCSV, parseExcel } from "../services/csv.service";
 import {
-  createStudentsService,
   deleteStudentService,
   getStudentByIdService,
-  getStudentsByGroupAndGradeService,
-  getStudentsService,
+  getStudentsBySchoolGroupService,
+  getSchoolGroupData,
   updateStudentService,
 } from "../services/student.service";
-import { StudentFilter } from "../types/student.types";
 import { generateGroupTickets } from "../services/pdf.service";
+import { SchoolGroupFilter } from "../types/school.types";
+import {
+  insertStudents,
+  mapCSVStudentsToStudents,
+} from "../helpers/student.helper";
+import { CSVStudent } from "../types/student.types";
 
-export async function createStudents(req: Request, res: Response) {
+export async function createStudentsFromBody(req: Request, res: Response) {
   try {
     const user = (req as any).user;
     const createdBy = user?.userId;
 
-    if (!createdBy) return error(res, "Unathorized: missing user", 401);
+    if (!createdBy) return error(res, "Unauthorized: missing user", 401);
 
-    let studentsData: any[] = [];
+    const studentsData = req.body.students;
+    if (!studentsData) return error(res, "No students data provided", 400);
 
-    if (req.file) {
-      const filePath = req.file.path;
-      if (filePath.endsWith(".csv")) studentsData = await parseCSV(filePath);
-      else if (filePath.endsWith(".xlsx") || filePath.endsWith(".xls"))
-        studentsData = await parseExcel(filePath);
-      else cleanUpFile(filePath);
-    } else if (req.body.students) studentsData = req.body.students;
-    else return error(res, "No students data provided", 400);
+    const studentsInserted = await insertStudents(studentsData, createdBy);
 
-    if (studentsData.length === 0)
-      return error(res, "No students data provided", 400);
+    return success(res, studentsInserted);
+  } catch (e: any) {
+    return error(res, e.message, 500);
+  }
+}
 
-    const dataToInsert = studentsData.map((s) => ({
-      ...s,
-      created_by: createdBy,
-      created_at: new Date(),
-    }));
+export async function createStudentsFromFile(req: Request, res: Response) {
+  try {
+    const user = (req as any).user;
+    const createdBy = user?.userId;
 
-    const studentsInserted = await createStudentsService(dataToInsert);
-    if (req.file) await cleanUpFile(req.file.path);
+    if (!createdBy) return error(res, "Unauthorized: missing user", 401);
+    if (!req.file) return error(res, "No file uploaded", 400);
 
+    const filePath = req.file.path;
+    let csvStudents: CSVStudent[] = [];
+
+    if (filePath.endsWith(".csv")) {
+      csvStudents = await parseCSV(filePath);
+    } else if (filePath.endsWith(".xlsx") || filePath.endsWith(".xls")) {
+      csvStudents = await parseExcel(filePath);
+    } else {
+      await cleanUpFile(filePath);
+      return error(res, "Unsupported file format", 400);
+    }
+
+    const studentsData = await mapCSVStudentsToStudents(csvStudents);
+
+    if (studentsData.length === 0) {
+      await cleanUpFile(filePath);
+      return error(
+        res,
+        "No valid students found or school groups not found",
+        400
+      );
+    }
+
+    const studentsInserted = await insertStudents(studentsData, createdBy);
+
+    await cleanUpFile(filePath);
     return success(res, studentsInserted);
   } catch (e: any) {
     if (req.file) await cleanUpFile(req.file.path);
@@ -51,14 +77,15 @@ export async function createStudents(req: Request, res: Response) {
 
 export async function getStudents(req: Request, res: Response) {
   try {
-    const filters: StudentFilter = {
-      group: req.query.group as string,
-      grade: req.query.grade as string,
+    const filter: SchoolGroupFilter = {
+      schoolGroup_id: req.query.schoolGroup_id
+        ? parseInt(req.query.schoolGroup_id as string, 10)
+        : undefined,
       sortBy: req.query.sortBy as "list_number",
       sortOrder: req.query.sortOrder as "asc" | "desc",
     };
 
-    const studentList = await getStudentsService(filters);
+    const studentList = await getSchoolGroupData(filter);
     return success(res, studentList);
   } catch (e: any) {
     return error(res, e.message, 500);
@@ -115,12 +142,14 @@ export async function deleteStudent(req: Request, res: Response) {
 
 export async function generateStudentTickets(req: Request, res: Response) {
   try {
-    const { group, grade } = req.params;
+    const { schoolGroupId } = req.params;
+    const schoolGroup_id = Number(schoolGroupId);
 
-    if (!group || !grade)
-      return error(res, "Group and Grade are required", 400);
+    if (!schoolGroup_id) return error(res, "Group and Grade are required", 400);
 
-    const students = await getStudentsByGroupAndGradeService(group, grade);
+    const { students, schoolGroup } = await getStudentsBySchoolGroupService(
+      schoolGroup_id
+    );
 
     if (students.length === 0)
       return error(
@@ -129,12 +158,16 @@ export async function generateStudentTickets(req: Request, res: Response) {
         404
       );
 
-    const pdfBuffer = await generateGroupTickets(students, group, grade);
+    const pdfBuffer = await generateGroupTickets(
+      students,
+      schoolGroup.group,
+      schoolGroup.grade
+    );
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `attachement;filename="Recibos_${group}${grade}.pdf`
+      `attachement;filename="Recibos_${schoolGroup.group}${schoolGroup.grade}.pdf`
     );
 
     return res.send(pdfBuffer);

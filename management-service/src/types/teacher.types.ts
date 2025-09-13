@@ -2,8 +2,7 @@ export interface Teacher {
   id: string;
   name: string;
   last_name: string;
-  grade: string;
-  group: string;
+  schoolGroup_id: number;
   created_at: Date;
   updated_at: Date;
   created_by: string;

@@ -19,7 +19,7 @@ export async function getTeachersService(): Promise<Teacher[]> {
   const { data: teachers, error } = await supabase.from("teachers").select("*");
 
   if (error) throw new Error(error.message);
-  return teachers;
+  return teachers ?? [];
 }
 
 export async function getTeacherByIdService(

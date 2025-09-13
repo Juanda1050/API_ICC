@@ -35,7 +35,7 @@ if (!process.env.JWT_SECRET) {
 }
 
 app.listen(PORT, async () => {
-  console.log(`Auth Service running on port ${PORT}`);
+  console.log(`Management Service running on port ${PORT}`);
 });
 
 export default app;

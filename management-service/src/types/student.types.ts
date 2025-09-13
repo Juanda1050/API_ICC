@@ -1,12 +1,10 @@
 export interface Student {
   id: string;
   name: string;
-  middle_name?: string;
   paternal_surname: string;
   maternal_surname?: string;
   list_number: number;
-  group: string;
-  grade: string;
+  schoolGroup_id: number;
   created_at: Date;
   updated_at: Date;
   created_by: string;
@@ -15,19 +13,12 @@ export interface Student {
 
 export interface CSVStudent {
   name: string;
-  middle_name?: string;
   paternal_surname: string;
   maternal_surname: string;
   list_number: number;
   group: string;
   grade: string;
-}
-
-export interface StudentFilter {
-  sortBy?: string;
-  sortOrder?: "asc" | "desc";
-  group?: string;
-  grade?: string;
+  school: string;
 }
 
 export interface AuthUser {

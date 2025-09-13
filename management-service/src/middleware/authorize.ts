@@ -6,8 +6,9 @@ export function authorizeMiddleware(roles: string[]) {
     const user = (req as any).user;
 
     if (!user) return error(res, "Unauthorized", 401);
+    console.log(user)
 
-    if (!roles.includes(user.role)) return error(res, "Forbidden", 403);
+    if (!roles.includes(user.roleId)) return error(res, "Forbidden", 403);
 
     next();
   };

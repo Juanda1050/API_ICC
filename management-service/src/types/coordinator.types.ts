@@ -12,3 +12,7 @@ export interface Role {
   id: string;
   name: string;
 }
+
+export type RoleDictionary = {
+  [key: string]: Role;
+};

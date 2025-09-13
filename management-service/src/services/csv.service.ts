@@ -12,12 +12,12 @@ export async function parseCSV(filePath: string): Promise<CSVStudent[]> {
       .on("data", (data) => {
         const student: CSVStudent = {
           name: data.name,
-          middle_name: data.middle_name || undefined,
           paternal_surname: data.paternal_surname,
           maternal_surname: data.maternal_surname,
           list_number: parseInt(data.list_number, 10),
           group: data.group,
           grade: data.grade,
+          school: data.school,
         };
 
         if (
@@ -26,7 +26,8 @@ export async function parseCSV(filePath: string): Promise<CSVStudent[]> {
           student.maternal_surname &&
           student.list_number &&
           student.group &&
-          student.grade
+          student.grade &&
+          student.school
         )
           results.push(student);
       })
@@ -50,12 +51,12 @@ export async function parseExcel(filepath: string): Promise<CSVStudent[]> {
       if (rowNumber === 1) return;
       const [
         name,
-        middle_name,
         paternal_surname,
         maternal_surname,
         list_number,
         group,
         grade,
+        school,
       ] = row.values as Array<string | number | undefined>;
       if (
         typeof name === "string" &&
@@ -63,17 +64,17 @@ export async function parseExcel(filepath: string): Promise<CSVStudent[]> {
         typeof maternal_surname === "string" &&
         typeof list_number === "number" &&
         typeof group === "string" &&
-        typeof grade === "string"
+        typeof grade === "string" &&
+        typeof school === "string"
       ) {
         students.push({
           name,
-          middle_name:
-            typeof middle_name === "string" ? middle_name : undefined,
           paternal_surname,
           maternal_surname,
           list_number,
           group,
           grade,
+          school,
         });
       }
     });
