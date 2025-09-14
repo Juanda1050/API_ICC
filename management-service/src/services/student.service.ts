@@ -91,7 +91,7 @@ export async function getSchoolGroupData(
     .from("schoolGroups")
     .select("id, school_id, school:schools (id, schoolName)")
     .eq("id", filter.schoolGroup_id)
-    .single();
+    .maybeSingle();
 
   if (errorGroup) throw new Error(errorGroup.message);
 
@@ -114,7 +114,7 @@ export async function getSchoolGroupData(
       )
       .eq("school_id", group.school_id)
       .eq("role_id", roles.coordinator.id)
-      .single();
+      .maybeSingle();
 
     if (errorCoord) throw new Error(errorCoord.message);
 

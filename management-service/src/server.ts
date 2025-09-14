@@ -27,7 +27,7 @@ app.use("/coordinator", coordinatorRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 4002;
+const PORT = process.env.MANAGEMENT_PORT || 4002;
 
 if (!process.env.JWT_SECRET) {
   console.error("FATAL: JWT_SECRET is not set.");

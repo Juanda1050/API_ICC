@@ -5,7 +5,7 @@ import {
   logoutUser,
   refreshToken,
   registerUser,
-} from "../services/auth.service";
+} from "../services/account.service";
 import pkg from "../../package.json";
 
 export async function register(req: Request, res: Response) {

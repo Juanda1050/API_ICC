@@ -7,10 +7,10 @@ import {
   refresh,
   logout,
   healthCheck,
-} from "../controllers/auth.controller";
+} from "../controllers/account.controller";
 import { z } from "zod/v3";
 
-const authRouter = Router();
+const accountRouter = Router();
 
 const registerSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -27,10 +27,10 @@ const refreshSchema = z.object({
   refreshToken: z.string().min(1, "Refresh token is required"),
 });
 
-authRouter.get("/health", healthCheck);
-authRouter.post("/register", validateBody(registerSchema), register);
-authRouter.post("/login", validateBody(loginSchema), login);
-authRouter.post("/refresh", validateBody(refreshSchema), refresh);
-authRouter.post("/logout", authenticateMiddleware, logout);
+accountRouter.get("/health", healthCheck);
+accountRouter.post("/register", validateBody(registerSchema), register);
+accountRouter.post("/login", validateBody(loginSchema), login);
+accountRouter.post("/refresh", validateBody(refreshSchema), refresh);
+accountRouter.post("/logout", authenticateMiddleware, logout);
 
-export default authRouter;
+export default accountRouter;

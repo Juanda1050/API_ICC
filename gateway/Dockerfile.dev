@@ -1,0 +1,27 @@
+FROM node:22-alpine
+
+RUN apk add --no-cache bash git
+
+WORKDIR /usr/src/app
+
+COPY gateway/package*.json ./gateway/
+WORKDIR /usr/src/app/gateway
+RUN npm ci
+
+WORKDIR /usr/src/app
+COPY auth-service/package*.json ./auth-service/
+COPY management-service/package*.json ./management-service/
+
+RUN if [ -f ./auth-service/package.json ]; then cd ./auth-service && npm ci; fi
+RUN if [ -f ./management-service/package.json ]; then cd ./management-service && npm ci; fi
+
+WORKDIR /usr/src/app/gateway
+COPY gateway/. .
+COPY ../auth-service ../auth-service
+COPY ../management-service ../management-service
+
+EXPOSE 8000 4000 4002
+
+ENV NODE_ENV=development
+
+CMD ["npm", "run", "dev"]

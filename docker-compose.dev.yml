@@ -1,0 +1,22 @@
+version: "4.46"
+services:
+  icc-api-container:
+    build:
+      context: .            
+      dockerfile: ./gateway/Dockerfile.dev
+    ports:
+      - "8000:8000"
+      - "4000:4000"
+      - "4002:4002"
+    env_file:
+      - ./gateway/.env.dev
+      - ./auth-service/.env.dev
+      - ./management-service/.env.dev
+    volumes:
+      - ./gateway:/usr/src/app/gateway
+      - ./auth-service:/usr/src/app/auth-service
+      - ./management-service:/usr/src/app/management-service
+      - /usr/src/app/gateway/node_modules
+      - /usr/src/app/auth-service/node_modules
+      - /usr/src/app/management-service/node_modules
+    command: npm run dev
