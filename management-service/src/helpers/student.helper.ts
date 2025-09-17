@@ -37,12 +37,7 @@ export async function mapCSVStudentsToStudents(
       csvStudent.grade
     );
 
-    if (!schoolGroupId) {
-    //   console.warn(
-    //     `No school group found for: ${csvStudent.name} ${csvStudent.paternal_surname} / ${csvStudent.school} - ${csvStudent.group} - ${csvStudent.grade}`
-    //   );
-      continue;
-    }
+    if (!schoolGroupId) continue;
 
     students.push({
       name: csvStudent.name,
