@@ -18,3 +18,13 @@ export const roles: RoleDictionary = {
     name: "admin",
   },
 };
+
+export const ALLOWED_SORT_FIELDS = [
+  "created_at",
+  "event_date",
+  "name",
+  "place",
+  "spent",
+  "total_amount",
+  "profit",
+];

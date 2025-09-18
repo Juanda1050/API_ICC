@@ -68,8 +68,6 @@ export async function getSchoolGroupData(
       ascending: filter.sortOrder === "asc",
     });
 
-    console.log(filter)
-
   if (errorStudents) throw new Error(errorStudents.message);
 
   const { data: teachersData, error: errorTeachers } = await supabase

@@ -24,4 +24,6 @@ export interface EventFilter {
   place?: string;
   start_event_date?: Date;
   end_event_date?: Date;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }
