@@ -1,4 +1,4 @@
-import { Billing } from "./billing.type";
+import { Billing } from "./billing.types";
 
 export interface EventInput {
   name: string;

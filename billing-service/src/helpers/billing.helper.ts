@@ -1,13 +1,17 @@
 import { supabase } from "../db";
-import { BillingInput } from "../types/billing.type";
+import { BillingInput } from "../types/billing.types";
 
 export function calculateTotalSales(
   billing: Pick<BillingInput, "sell_for" | "initial_stock" | "remaining_stock">
 ): number {
-  return Math.max(0, billing.initial_stock - billing.remaining_stock);
+  const sold = Math.max(0, billing.initial_stock - billing.remaining_stock);
+  return billing.sell_for * sold;
 }
 
-export async function recalculateEventTotals(eventId: string): Promise<void> {
+export async function recalculateEventTotals(
+  eventId: string,
+  userId: string
+): Promise<void> {
   const { data: billings, error } = await supabase
     .from("billings")
     .select("spent_in, total_sales")
@@ -25,6 +29,8 @@ export async function recalculateEventTotals(eventId: string): Promise<void> {
       spent: totalSpent,
       total_amount: totalSales,
       profi: profit,
+      updated_by: userId,
+      updated_at: new Date(),
     })
     .eq("id", eventId);
 

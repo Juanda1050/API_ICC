@@ -2,8 +2,8 @@ import { supabase } from "../db";
 import {
   calculateTotalSales,
   recalculateEventTotals,
-} from "../helpers/billing.helpers";
-import { Billing, BillingInput } from "../types/billing.type";
+} from "../helpers/billing.helper";
+import { Billing, BillingInput } from "../types/billing.types";
 
 export async function createBillingService(
   billingInput: BillingInput
@@ -20,7 +20,7 @@ export async function createBillingService(
 
   if (error) throw new Error(error.message);
 
-  await recalculateEventTotals(billingInput.event_id);
+  await recalculateEventTotals(billingInput.event_id, billingInput.user_id);
 
   return billing as Billing;
 }
@@ -72,12 +72,15 @@ export async function updateBillingService(
   if (updateError)
     throw new Error("Error updating billing: " + updateError.message);
 
-  await recalculateEventTotals(existing.event_id);
+  await recalculateEventTotals(existing.event_id, existing.user_id);
 
   return updated as Billing;
 }
 
-export async function deleteBillingService(billingId: string): Promise<void> {
+export async function deleteBillingService(
+  billingId: string,
+  user_id: string
+): Promise<void> {
   const { data: deletedBilling, error: delErr } = await supabase
     .from("billing")
     .delete()
@@ -89,5 +92,5 @@ export async function deleteBillingService(billingId: string): Promise<void> {
   if (!deletedBilling || !deletedBilling.event_id)
     throw new Error("Event Id from billing not found");
 
-  await recalculateEventTotals(deletedBilling.event_id);
+  await recalculateEventTotals(deletedBilling.event_id, user_id);
 }
