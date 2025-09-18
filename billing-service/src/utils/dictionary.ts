@@ -19,7 +19,7 @@ export const roles: RoleDictionary = {
   },
 };
 
-export const ALLOWED_SORT_FIELDS = [
+export const ALLOWED_SORT_FIELDS_EVENTS = [
   "created_at",
   "event_date",
   "name",
@@ -28,3 +28,5 @@ export const ALLOWED_SORT_FIELDS = [
   "total_amount",
   "profit",
 ];
+
+export const ALLOWED_SORT_FIELDS_CONTRIBUTIONS = ["created_at", "updated_at"];

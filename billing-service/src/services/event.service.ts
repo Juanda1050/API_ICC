@@ -1,6 +1,6 @@
 import { supabase } from "../db";
 import { Event, EventFilter, EventInput } from "../types/event.types";
-import { ALLOWED_SORT_FIELDS } from "../utils/dictionary";
+import { ALLOWED_SORT_FIELDS_EVENTS } from "../utils/dictionary";
 
 export async function createEventService(
   eventInput: EventInput
@@ -60,7 +60,7 @@ export async function getEventsService(
     query = query.lte("event_date", endIso);
   }
 
-  const sortBy = ALLOWED_SORT_FIELDS.includes(filter.sortBy || "")
+  const sortBy = ALLOWED_SORT_FIELDS_EVENTS.includes(filter.sortBy || "")
     ? filter.sortBy!
     : "event_date";
   const ascending = filter.sortOrder === "asc";
