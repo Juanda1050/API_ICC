@@ -190,3 +190,15 @@ export async function deleteStudentService(id: string): Promise<void> {
   const { error } = await supabase.from("students").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }
+
+export async function getSchoolGroupByIdService(schoolGroup_id: number) {
+  const { data: schoolGroup, error: schoolGroupError } = await supabase
+    .from("schoolGroups")
+    .select("*")
+    .eq("id", schoolGroup_id)
+    .single();
+
+  if (schoolGroupError) throw new Error(schoolGroupError.message);
+
+  return schoolGroup;
+}

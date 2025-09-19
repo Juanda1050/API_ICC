@@ -7,6 +7,7 @@ import {
   createStudentsFromBody,
   createStudentsFromFile,
   deleteStudent,
+  generateStudentTicketById,
   generateStudentTickets,
   getStudentById,
   getStudents,
@@ -79,6 +80,11 @@ studentRouter.post(
   ...adminAuth,
   validateParams(generateTicketsSchema),
   generateStudentTickets
+);
+studentRouter.post(
+  "/ticket/:studentId",
+  ...adminAuth,
+  generateStudentTicketById
 );
 studentRouter.put(
   "/:id",

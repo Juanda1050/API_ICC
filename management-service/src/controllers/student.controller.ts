@@ -7,6 +7,7 @@ import {
   getStudentsBySchoolGroupService,
   getSchoolGroupData,
   updateStudentService,
+  getSchoolGroupByIdService,
 } from "../services/student.service";
 import { generateGroupTickets } from "../services/pdf.service";
 import { SchoolGroupFilter } from "../types/school.types";
@@ -79,12 +80,17 @@ export async function getStudents(req: Request, res: Response) {
   try {
     const { schoolGroup_id, sortBy, sortOrder } = req.body;
 
+    let groupId: number | undefined;
+
+    if (typeof schoolGroup_id === "string" && schoolGroup_id.trim() !== "") {
+      const parsed = parseInt(schoolGroup_id, 10);
+      if (!isNaN(parsed)) groupId = parsed;
+    } else if (typeof schoolGroup_id === "number") {
+      groupId = schoolGroup_id;
+    }
+
     const filter: SchoolGroupFilter = {
-      schoolGroup_id:
-        typeof schoolGroup_id === "string" &&
-        !isNaN(parseInt(schoolGroup_id, 10))
-          ? parseInt(schoolGroup_id, 10)
-          : undefined,
+      schoolGroup_id: groupId,
       sortBy: typeof sortBy === "string" ? sortBy : "list_number",
       sortOrder:
         sortOrder === "asc" || sortOrder === "desc" ? sortOrder : "asc",
@@ -142,6 +148,35 @@ export async function deleteStudent(req: Request, res: Response) {
     return success(res, true);
   } catch (e: any) {
     return error(res, e.message, 500);
+  }
+}
+
+export async function generateStudentTicketById(req: Request, res: Response) {
+  try {
+    const { studentId } = req.params;
+    if (!studentId) return error(res, "Student ID is required", 400);
+
+    const student = await getStudentByIdService(studentId);
+    if (!student) return error(res, "Student not found", 404);
+
+    const schoolGroup = await getSchoolGroupByIdService(student.schoolGroup_id);
+    if (!schoolGroup) return error(res, "School group not found", 404);
+
+    const pdfBuffer = await generateGroupTickets(
+      [student],
+      schoolGroup.group,
+      schoolGroup.grade
+    );
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="Recibo_${student.name}_${schoolGroup.group}${schoolGroup.grade}.pdf"`
+    );
+
+    return res.send(pdfBuffer);
+  } catch (e: any) {
+    return error(res, `generateStudentTicketById: ${e.message}`, 500);
   }
 }
 
