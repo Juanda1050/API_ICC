@@ -77,12 +77,17 @@ export async function createStudentsFromFile(req: Request, res: Response) {
 
 export async function getStudents(req: Request, res: Response) {
   try {
+    const { schoolGroup_id, sortBy, sortOrder } = req.body;
+
     const filter: SchoolGroupFilter = {
-      schoolGroup_id: req.body.schoolGroup_id
-        ? parseInt(req.body.schoolGroup_id as string, 10)
-        : undefined,
-      sortBy: (req.body.sortBy as "list_number") ?? "list_number",
-      sortOrder: (req.body.sortOrder as "asc" | "desc") ?? "asc",
+      schoolGroup_id:
+        typeof schoolGroup_id === "string" &&
+        !isNaN(parseInt(schoolGroup_id, 10))
+          ? parseInt(schoolGroup_id, 10)
+          : undefined,
+      sortBy: typeof sortBy === "string" ? sortBy : "list_number",
+      sortOrder:
+        sortOrder === "asc" || sortOrder === "desc" ? sortOrder : "asc",
     };
 
     const studentList = await getSchoolGroupData(filter);

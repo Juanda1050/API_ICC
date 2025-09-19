@@ -75,7 +75,7 @@ export async function getEventsService(
 
 export async function updateEventService(
   event_id: string,
-  updates: EventInput
+  updates: Partial<EventInput>
 ): Promise<Event> {
   const { data: event, error } = await supabase
     .from("events")

@@ -2,11 +2,7 @@ import { Router } from "express";
 import z from "zod/v3";
 import { authenticateMiddleware } from "../middleware/authenticate";
 import { authorizeMiddleware } from "../middleware/authorize";
-import {
-  validateBody,
-  validateParams,
-  validateQuery,
-} from "../middleware/validate";
+import { validateBody, validateParams } from "../middleware/validate";
 import {
   createStudentsFromBody,
   createStudentsFromFile,
