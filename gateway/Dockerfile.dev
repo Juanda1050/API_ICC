@@ -10,17 +10,20 @@ RUN npm ci
 
 WORKDIR /usr/src/app
 COPY auth-service/package*.json ./auth-service/
+COPY billing-service/package*.json ./billing-service/
 COPY management-service/package*.json ./management-service/
 
 RUN if [ -f ./auth-service/package.json ]; then cd ./auth-service && npm ci; fi
+RUN if [ -f ./billing-service/package.json ]; then cd ./billing-service && npm ci; fi
 RUN if [ -f ./management-service/package.json ]; then cd ./management-service && npm ci; fi
 
 WORKDIR /usr/src/app/gateway
 COPY gateway/. .
 COPY ../auth-service ../auth-service
+COPY ../billing-service ../billing-service
 COPY ../management-service ../management-service
 
-EXPOSE 8000 4000 4002
+EXPOSE 8000 4000 4001 4002
 
 ENV NODE_ENV=development
 
