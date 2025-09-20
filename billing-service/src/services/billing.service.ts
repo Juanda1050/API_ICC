@@ -20,7 +20,7 @@ export async function createBillingService(
 
   if (error) throw new Error(error.message);
 
-  await recalculateEventTotals(billingInput.event_id, billingInput.user_id);
+  await recalculateEventTotals(billingInput.event_id, billingInput.changed_By);
 
   return billing as Billing;
 }

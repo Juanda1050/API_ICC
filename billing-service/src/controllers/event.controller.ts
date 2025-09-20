@@ -34,6 +34,8 @@ export async function createEvent(req: Request, res: Response) {
 
 export async function getEvents(req: Request, res: Response) {
   try {
+    const filterBody = req.body?.filter || {};
+
     const {
       place,
       search,
@@ -41,7 +43,7 @@ export async function getEvents(req: Request, res: Response) {
       sortOrder,
       start_event_date,
       end_event_date,
-    } = req.body;
+    } = filterBody;
 
     const filter: EventFilter = {
       place: typeof place === "string" ? place : undefined,

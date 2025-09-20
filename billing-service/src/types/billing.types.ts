@@ -6,7 +6,7 @@ export interface BillingInput {
   initial_stock: number;
   remaining_stock: number;
   description?: string;
-  user_id: string;
+  changed_By: string;
 }
 
 export interface Billing {
