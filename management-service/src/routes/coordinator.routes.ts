@@ -5,17 +5,11 @@ import {
   getCoordinators,
   updateCoordinator,
 } from "../controllers/coordinator.controller";
-import z from "zod/v3";
 import { validateBody } from "../middleware/validate";
 import { roles } from "../utils/dictionary";
+import { coordinatorInputSchema } from "../schemas/coordinator.schemas";
 
 const coordinatorRouter = Router();
-
-const updateCoordinatorSchema = z.object({
-  email: z.string().optional(),
-  telephone: z.string().optional(),
-  role_id: z.string().min(1, "Role is required"),
-});
 
 const adminAuth = [
   authenticateMiddleware,
@@ -26,7 +20,7 @@ coordinatorRouter.get("/", ...adminAuth, getCoordinators);
 coordinatorRouter.put(
   "/",
   ...adminAuth,
-  validateBody(updateCoordinatorSchema),
+  validateBody(coordinatorInputSchema),
   updateCoordinator
 );
 
