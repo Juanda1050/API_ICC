@@ -37,7 +37,7 @@ if (!process.env.JWT_SECRET) {
 }
 
 app.listen(PORT, async () => {
-  console.log(`Management Service running on port ${PORT}`);
+  console.log(`Billing Service running on port ${PORT}`);
 });
 
 export default app;
