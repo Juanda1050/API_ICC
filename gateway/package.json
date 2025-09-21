@@ -4,10 +4,9 @@
   "description": "",
   "main": "dist/server.js",
   "scripts": {
-    "dev:auth": "npm run dev --prefix ../auth-service",
-    "dev:management": "npm run dev --prefix ../management-service",
-    "dev:gateway": "ts-node-dev --respawn --transpile-only --poll --ignore-watch node_modules ./src/server.ts",
-    "dev": "concurrently -k \"npm:dev:auth\" \"npm:dev:management\" \"npm:dev:gateway\""
+    "dev": "ts-node-dev --respawn --transpile-only ./src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",

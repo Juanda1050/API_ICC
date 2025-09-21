@@ -8,8 +8,8 @@ import {
   getIndivContributions,
   updateIndivContribution,
 } from "../controllers/individualContribution.controller";
-import { validateBody } from "../../../management-service/src/middleware/validate";
 import { indivContributionInputSchema } from "../schemas/individualContribution.schemas";
+import { validateBody } from "../middleware/validate";
 
 const indivContributionRouter = Router();
 

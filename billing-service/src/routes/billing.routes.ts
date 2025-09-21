@@ -2,13 +2,13 @@ import { Router } from "express";
 import { authenticateMiddleware } from "../middleware/authenticate";
 import { authorizeMiddleware } from "../middleware/authorize";
 import { roles } from "../utils/dictionary";
-import { validateBody } from "../../../management-service/src/middleware/validate";
 import {
   createBilling,
   deleteBilling,
   getEventBillings,
 } from "../controllers/billing.controller";
 import { billingInputSchema } from "../schemas/billing.schemas";
+import { validateBody } from "../middleware/validate";
 
 const billingRouter = Router();
 

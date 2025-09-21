@@ -9,11 +9,11 @@ import {
   getContributions,
   updateContribution,
 } from "../controllers/contribution.controller";
-import { validateBody } from "../../../management-service/src/middleware/validate";
 import {
   contributionFilterSchema,
   contributionInputSchema,
 } from "../schemas/contribution.schemas";
+import { validateBody } from "../middleware/validate";
 
 const contributionRouter = Router();
 

@@ -1,4 +1,3 @@
-import { validateBody } from "./../../../management-service/src/middleware/validate";
 import { Router } from "express";
 import { authenticateMiddleware } from "../middleware/authenticate";
 import { authorizeMiddleware } from "../middleware/authorize";
@@ -11,6 +10,7 @@ import {
   getEvents,
   updateEvent,
 } from "../controllers/event.controller";
+import { validateBody } from "../middleware/validate";
 
 const eventRouter = Router();
 
