@@ -40,3 +40,5 @@ indivContributionRouter.put(
   updateIndivContribution
 );
 indivContributionRouter.delete("/:id", ...adminAuth, deleteIndivContribution);
+
+export default indivContributionRouter;
