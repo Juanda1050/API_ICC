@@ -34,7 +34,7 @@ export async function createBilling(req: Request, res: Response) {
 export async function getEventBillings(req: Request, res: Response) {
   try {
     const { eventId } = req.params;
-    if (!eventId) return error(res, "Event Id is required", 400);
+    if (!eventId) return error(res, "Event Id not found", 400);
 
     const billingList = await getEventBillingsService(eventId);
     return success(res, billingList);
@@ -53,15 +53,15 @@ export async function updateBilling(req: Request, res: Response) {
     const { id } = req.params;
     const billingToUpdate = req.body;
 
-    const dataToInsert = {
+    const dataToUpdate = {
       ...billingToUpdate,
       updated_by: updatedBy,
       updated_at: new Date(),
     };
 
-    const billing = await updateBillingService(id, dataToInsert);
+    const billingUpdated = await updateBillingService(id, dataToUpdate);
 
-    return success(res, billing);
+    return success(res, billingUpdated);
   } catch (e: any) {
     return error(res, `updateBilling endpoint: `, 500);
   }
@@ -76,6 +76,8 @@ export async function deleteBilling(req: Request, res: Response) {
 
     const { id } = req.params;
     await deleteBillingService(id, updatedBy);
+
+    return success(res, true);
   } catch (e: any) {
     return error(res, `deleteBilling endpoint: `, 500);
   }

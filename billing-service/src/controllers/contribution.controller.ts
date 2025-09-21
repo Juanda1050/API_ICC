@@ -84,9 +84,9 @@ export async function updateContribution(req: Request, res: Response) {
       updated_at: new Date(),
     };
 
-    const eventUpdated = await updateContributionService(id, dataToUpdate);
+    const contributionUpdated = await updateContributionService(id, dataToUpdate);
 
-    return success(res, eventUpdated);
+    return success(res, contributionUpdated);
   } catch (e: any) {
     return error(res, `updateContribution endpoint: ${e.message}`, 500);
   }

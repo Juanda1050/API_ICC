@@ -7,5 +7,5 @@ export const billingInputSchema = z.object({
   initial_stock: z.number().min(1, "Initial stock must be at least 1"),
   remaining_stock: z.number().min(0, "Remaining stock must be >= 0"),
   description: z.string().optional(),
-  changed_by: z.string().min(1, "User is required"),
+  changed_by: z.string().min(1, "User Id is required"),
 });
