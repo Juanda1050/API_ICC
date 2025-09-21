@@ -87,13 +87,13 @@ export async function updateEvent(req: Request, res: Response) {
     const { id } = req.params;
     const eventToUpdate = req.body;
 
-    const dataToInsert: EventInput = {
+    const dataToUpdate: EventInput = {
       ...eventToUpdate,
       updated_by: updatedBy,
       updated_at: new Date(),
     };
 
-    const eventUpdated = await updateEventService(id, dataToInsert);
+    const eventUpdated = await updateEventService(id, dataToUpdate);
 
     return success(res, eventUpdated);
   } catch (e: any) {

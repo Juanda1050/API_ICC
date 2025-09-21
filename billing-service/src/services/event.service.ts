@@ -89,7 +89,19 @@ export async function updateEventService(
 }
 
 export async function deleteEventService(event_id: string): Promise<void> {
-  const { error } = await supabase.from("events").delete().eq("id", event_id);
+  const { error: billingError } = await supabase
+    .from("billings")
+    .delete()
+    .eq("event_id", event_id);
 
-  if (error) throw new Error(error.message);
+  if (billingError) {
+    throw new Error(`Error deleting billings: ${billingError.message}`);
+  }
+
+  const { error: eventError } = await supabase
+    .from("events")
+    .delete()
+    .eq("id", event_id);
+
+  if (eventError) throw new Error(eventError.message);
 }

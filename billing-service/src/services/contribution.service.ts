@@ -73,10 +73,25 @@ export async function updateContributionService(
 export async function deleteContributionService(
   contribution_id: string
 ): Promise<void> {
-  const { error } = await supabase
+  const { error: individualError } = await supabase
+    .from("individual_contributions")
+    .delete()
+    .eq("contribution_id", contribution_id);
+
+  if (individualError) {
+    throw new Error(
+      `Error deleting individual contributions: ${individualError.message}`
+    );
+  }
+
+  const { error: contributionError } = await supabase
     .from("contributions")
     .delete()
     .eq("id", contribution_id);
 
-  if (error) throw new Error(error.message);
+  if (contributionError) {
+    throw new Error(
+      `Error deleting contribution: ${contributionError.message}`
+    );
+  }
 }
