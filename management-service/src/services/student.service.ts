@@ -134,6 +134,20 @@ export async function getSchoolGroupData(
   };
 }
 
+export async function getSchoolGroupsByGradeService(
+  grade: number,
+  level: string
+) {
+  const { data, error } = await supabase
+    .from("schoolGroups")
+    .select("id, group, grade, level")
+    .eq("grade", grade)
+    .eq("level", level);
+
+  if (error) throw new Error(`Error getting school groups: ${error.message}`);
+  return data;
+}
+
 export async function getStudentsBySchoolGroupService(schoolGroup_id: number) {
   const { data: students, error } = await supabase
     .from("students")

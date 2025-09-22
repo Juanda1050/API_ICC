@@ -8,6 +8,7 @@ import {
   deleteStudent,
   generateStudentTicketById,
   generateStudentTickets,
+  getSchoolGroupByGrade,
   getStudentById,
   getStudents,
   updateStudent,
@@ -32,6 +33,7 @@ const adminAuth = [
 ];
 
 studentRouter.get("/:id", ...adminAuth, getStudentById);
+studentRouter.post("/schoolGroupsByGrade", ...adminAuth, getSchoolGroupByGrade);
 studentRouter.post(
   "/getAll",
   ...adminAuth,

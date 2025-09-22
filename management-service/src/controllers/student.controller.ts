@@ -8,6 +8,7 @@ import {
   getSchoolGroupData,
   updateStudentService,
   getSchoolGroupByIdService,
+  getSchoolGroupsByGradeService,
 } from "../services/student.service";
 import { generateGroupTickets } from "../services/pdf.service";
 import { SchoolGroupFilter } from "../types/school.types";
@@ -111,6 +112,20 @@ export async function getStudentById(req: Request, res: Response) {
     if (!student) return error(res, "Student not found", 404);
 
     return success(res, student);
+  } catch (e: any) {
+    return error(res, e.message, 500);
+  }
+}
+
+export async function getSchoolGroupByGrade(req: Request, res: Response) {
+  try {
+    const { grade, level } = req.body;
+
+    if (!grade || !level) return error(res, "No grade or level provided", 400);
+
+    const schoolGroups = await getSchoolGroupsByGradeService(grade, level);
+
+    return success(res, schoolGroups);
   } catch (e: any) {
     return error(res, e.message, 500);
   }
