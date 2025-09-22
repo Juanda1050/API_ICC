@@ -16,7 +16,10 @@ import {
   deleteGraduationService,
   getGraduationByIdService,
   getGraduationExpensesService,
+  getGraduationExpenseSummaryService,
+  getGraduationFinancialSummaryService,
   getGraduationPaymentsService,
+  getStudentsPaymentStatusService,
   updateGraduationExpenseService,
   updateGraduationPaymentService,
   updateGraduationService,
@@ -235,5 +238,51 @@ export async function deleteGraduationExpense(req: Request, res: Response) {
     return success(res, true);
   } catch (e: any) {
     return error(res, `deleteGraduationExpense endpoint: ${e.message}`, 500);
+  }
+}
+
+export async function getGraduationFinancialSummary(
+  req: Request,
+  res: Response
+) {
+  try {
+    const { graduationId } = req.params;
+    const summary = await getGraduationFinancialSummaryService(graduationId);
+
+    return success(res, summary);
+  } catch (e: any) {
+    return error(
+      res,
+      `getGraduationFinancialSummary endpoint: ${e.message}`,
+      500
+    );
+  }
+}
+
+export async function getStudentsPaymentStatus(req: Request, res: Response) {
+  try {
+    const { graduationId } = req.params;
+    const paymentStatus = await getStudentsPaymentStatusService(graduationId);
+
+    return success(res, paymentStatus);
+  } catch (e: any) {
+    return error(res, `getStudentsPaymentStatus endpoint: ${e.message}`, 500);
+  }
+}
+
+export async function getGraduationExpenseSummary(req: Request, res: Response) {
+  try {
+    const { graduationId } = req.params;
+    const expenseSummary = await getGraduationExpenseSummaryService(
+      graduationId
+    );
+
+    return success(res, expenseSummary);
+  } catch (e: any) {
+    return error(
+      res,
+      `getGraduationExpenseSummary endpoint: ${e.message}`,
+      500
+    );
   }
 }
