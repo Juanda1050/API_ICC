@@ -3,7 +3,9 @@ import z from "zod/v3";
 export const graduationSchema = z.object({
   name: z.string().min(1, "Graduation name is required"),
   event_date: z.string().datetime("Invalid date format"),
-  total_cost: z.number().min(1, "Graduation cost amount must be at least 1"),
+  cost_per_student: z.number().min(1, "Cost per student must be at least 1"),
+  estimated_cost: z.number().optional(),
+  total_collected: z.number().optional(),
   created_by: z.string().min(1, "User is required"),
 });
 
@@ -27,8 +29,13 @@ export const graduationExpenseSchema = z.object({
 
 export const graduationPaymentFilterSchema = z.object({
   student_id: z.string().uuid("Invalid student ID").optional(),
-  schoolGroup_id: z.number().int().positive("Invalid school group ID").optional(),
-  payment_date: z.array(z.string().datetime("Invalid date format"))
+  schoolGroup_id: z
+    .number()
+    .int()
+    .positive("Invalid school group ID")
+    .optional(),
+  payment_date: z
+    .array(z.string().datetime("Invalid date format"))
     .length(2, "Payment date must be an array of 2 dates [start, end]")
     .optional(),
   sortBy: z.string().optional(),
@@ -38,7 +45,8 @@ export const graduationPaymentFilterSchema = z.object({
 export const graduationExpenseFilterSchema = z.object({
   search: z.string().optional(),
   method: z.string().optional(),
-  expense_date: z.array(z.string().datetime("Invalid date format"))
+  expense_date: z
+    .array(z.string().datetime("Invalid date format"))
     .length(2, "Expense date must be an array of 2 dates [start, end]")
     .optional(),
   sortBy: z.string().optional(),

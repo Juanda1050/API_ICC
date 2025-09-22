@@ -2,7 +2,10 @@ export interface Graduation {
   id?: string;
   name: string;
   event_date: Date;
-  total_cost: number;
+  cost_per_student: number;
+  estimated_cost?: number;
+  total_collected?: number;
+  schoolGroup_ids?: number[];
   created_by: string;
   created_at?: Date;
 }
@@ -30,8 +33,8 @@ export interface GraduationExpense {
 }
 
 export interface GraduationPaymentFilter {
-  student_id?: string;
-  schoolGroup_id?: number;
+  search?: string;
+  schoolGroup_id?: number[];
   payment_date?: [Date, Date];
   sortBy?: string;
   sortOrder?: "asc" | "desc";
