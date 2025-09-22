@@ -1,5 +1,8 @@
 import { supabase } from "../db";
-import { recalculateGraduationTotalCollected } from "../helpers/graduation.helper";
+import {
+  assignGroupsToGraduation,
+  recalculateGraduationTotalCollected,
+} from "../helpers/graduation.helper";
 import {
   Graduation,
   GraduationExpense,
@@ -11,9 +14,8 @@ import {
 export async function createGraduationService(
   graduationInput: Graduation
 ): Promise<Graduation> {
-  if (!graduationInput.schoolGroup_ids?.length) {
+  if (!graduationInput.schoolGroup_ids?.length)
     throw new Error("At least one school group must be specified");
-  }
 
   const { count: totalStudents, error: countError } = await supabase
     .from("students")
@@ -40,6 +42,8 @@ export async function createGraduationService(
     .single();
 
   if (error) throw new Error(`Error creating graduation: ${error.message}`);
+
+  await assignGroupsToGraduation(data.id, graduationInput.schoolGroup_ids);
 
   return data as Graduation;
 }
@@ -117,7 +121,7 @@ export async function createGraduationPaymentService(
 
   if (error)
     throw new Error(`Error creating graduation payment: ${error.message}`);
-  
+
   await recalculateGraduationTotalCollected(payment.graduation_id);
 
   return payment as GraduationPayment;
@@ -266,4 +270,178 @@ export async function deleteGraduationExpenseService(
     .eq("id", expenseId);
 
   if (error) throw new Error(`Error deleting expense: ${error.message}`);
+}
+
+export async function getGraduationFinancialSummaryService(
+  graduationId: string
+) {
+  const { data: graduation, error: gradError } = await supabase
+    .from("graduations")
+    .select("*")
+    .eq("id", graduationId)
+    .single();
+
+  if (gradError)
+    throw new Error(`Error getting graduation: ${gradError.message}`);
+
+  const { data: graduationGroups, error: groupsError } = await supabase
+    .from("graduationGroups")
+    .select("schoolGroup_id")
+    .eq("graduation_id", graduationId);
+
+  if (groupsError)
+    throw new Error(`Error getting graduation groups: ${groupsError.message}`);
+
+  const groupIds = graduationGroups?.map((g) => g.schoolGroup_id) || [];
+
+  let totalStudents = 0;
+  if (groupIds.length > 0) {
+    const { count, error: countError } = await supabase
+      .from("students")
+      .select("*", { count: "exact", head: true })
+      .in("schoolGroup_id", groupIds);
+
+    if (countError)
+      throw new Error(`Error counting students: ${countError.message}`);
+    totalStudents = count || 0;
+  }
+
+  const { data: expenses, error: expError } = await supabase
+    .from("graduationExpenses")
+    .select("amount")
+    .eq("graduation_id", graduationId);
+
+  if (expError) throw new Error(`Error getting expenses: ${expError.message}`);
+
+  const totalSpent =
+    expenses?.reduce((sum, e) => sum + (e.amount || 0), 0) || 0;
+
+  const expectedRevenue = (graduation.cost_per_student || 0) * totalStudents;
+  const availableBalance = graduation.total_collected - totalSpent;
+  const collectionPercentage =
+    expectedRevenue > 0
+      ? (graduation.total_collected / expectedRevenue) * 100
+      : 0;
+
+  return {
+    graduation: {
+      id: graduation.id,
+      name: graduation.name,
+      event_date: graduation.event_date,
+    },
+    finances: {
+      cost_per_student: graduation.cost_per_student,
+      estimated_cost: graduation.estimated_cost,
+      expected_revenue: expectedRevenue,
+      total_collected: graduation.total_collected,
+      total_spent: totalSpent,
+      available_balance: availableBalance,
+      collection_percentage: Number(collectionPercentage.toFixed(2)),
+    },
+    students: {
+      total_students: totalStudents,
+    },
+  };
+}
+
+export async function getStudentsPaymentStatusService(graduationId: string) {
+  const { data: graduationGroups, error: groupsError } = await supabase
+    .from("graduationGroups")
+    .select("schoolGroup_id")
+    .eq("graduation_id", graduationId);
+
+  if (groupsError)
+    throw new Error(`Error getting graduation groups: ${groupsError.message}`);
+
+  const groupIds = graduationGroups?.map((g) => g.schoolGroup_id) || [];
+  if (groupIds.length === 0) return [];
+
+  const { data: students, error: studentsError } = await supabase
+    .from("students")
+    .select("*, schoolGroups(group, grade)")
+    .in("schoolGroup_id", groupIds);
+
+  if (studentsError)
+    throw new Error(`Error getting students: ${studentsError.message}`);
+
+  const { data: graduation, error: gradError } = await supabase
+    .from("graduations")
+    .select("cost_per_student")
+    .eq("id", graduationId)
+    .single();
+
+  if (gradError)
+    throw new Error(`Error getting graduation: ${gradError.message}`);
+
+  const { data: allPayments, error: paymentsError } = await supabase
+    .from("graduationPayments")
+    .select("*")
+    .eq("graduation_id", graduationId)
+    .order("payment_date", { ascending: true });
+
+  if (paymentsError)
+    throw new Error(`Error getting payments: ${paymentsError.message}`);
+
+  const paymentsByStudent: Record<string, GraduationPayment[]> = {};
+
+  for (const pay of allPayments || []) {
+    if (!paymentsByStudent[pay.student_id]) {
+      paymentsByStudent[pay.student_id] = [];
+    }
+    paymentsByStudent[pay.student_id].push(pay as GraduationPayment);
+  }
+
+  const results = students.map((student) => {
+    const studentPayments = paymentsByStudent[student.id] || [];
+    const totalPaid = studentPayments.reduce(
+      (sum, p) => sum + (p.amount || 0),
+      0
+    );
+    const balance = (graduation.cost_per_student || 0) - totalPaid;
+
+    return {
+      student_id: student.id,
+      student_name: student.name,
+      school_group: student.schoolGroups
+        ? `${student.schoolGroups.grade}${student.schoolGroups.group}`
+        : null,
+      total_paid: totalPaid,
+      balance_remaining: balance,
+      liquidated: totalPaid >= (graduation.cost_per_student || 0),
+      payments: studentPayments,
+    };
+  });
+
+  return results;
+}
+
+export async function getGraduationExpenseSummaryService(graduationId: string) {
+  const { data: expenses, error } = await supabase
+    .from("graduationExpenses")
+    .select("*")
+    .eq("graduation_id", graduationId)
+    .order("expense_date", { ascending: false });
+
+  if (error)
+    throw new Error(`Error getting graduation expenses: ${error.message}`);
+
+  const totalSpent =
+    expenses?.reduce((sum, e) => sum + (e.amount || 0), 0) || 0;
+
+  const byConcept: Record<string, number> = {};
+  expenses?.forEach((e) => {
+    byConcept[e.concept] = (byConcept[e.concept] || 0) + e.amount;
+  });
+
+  const byMethod: Record<string, number> = {};
+  expenses?.forEach((e) => {
+    byMethod[e.method] = (byMethod[e.method] || 0) + e.amount;
+  });
+
+  return {
+    total_spent: totalSpent,
+    by_concept: byConcept,
+    by_method: byMethod,
+    details: expenses || [],
+  };
 }
