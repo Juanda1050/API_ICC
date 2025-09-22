@@ -2,16 +2,22 @@ import { Request, Response } from "express";
 import { error, success } from "../utils/response";
 import {
   Graduation,
+  GraduationExpense,
+  GraduationExpenseFilter,
   GraduationPayment,
   GraduationPaymentFilter,
 } from "../types/graduation.types";
 import {
+  createGraduationExpenseService,
   createGraduationPaymentService,
   createGraduationService,
+  deleteGraduationExpenseService,
   deleteGraduationPaymentService,
   deleteGraduationService,
   getGraduationByIdService,
+  getGraduationExpensesService,
   getGraduationPaymentsService,
+  updateGraduationExpenseService,
   updateGraduationPaymentService,
   updateGraduationService,
 } from "../services/graduation.service";
@@ -154,6 +160,80 @@ export async function deleteGraduationPayment(req: Request, res: Response) {
 
     return success(res, true);
   } catch (e: any) {
-    return error(res, `updateGraduationPayments endpoint: ${e.message}`, 500);
+    return error(res, `deleteGraduationPayment endpoint: ${e.message}`, 500);
+  }
+}
+
+export async function createGraduationExpense(req: Request, res: Response) {
+  try {
+    const user = (req as any).user;
+    const createdBy = user?.userId;
+
+    if (!createdBy) return error(res, "Unauthorized: missing user", 401);
+
+    const expenseData: GraduationExpense = req.body;
+    if (!expenseData) return error(res, "No graduation expense provied", 400);
+
+    const dataToInsert = {
+      ...expenseData,
+      created_by: createdBy,
+      created_at: new Date(),
+    };
+
+    const expenseCreated = await createGraduationExpenseService(dataToInsert);
+    return success(res, expenseCreated);
+  } catch (e: any) {
+    return error(res, `createGraduationExpense endpoint: ${e.message}`, 500);
+  }
+}
+
+export async function getGraduationExpenses(req: Request, res: Response) {
+  try {
+    const { graduationId } = req.params;
+    const filterBody = req.body?.filter || {};
+
+    const { search, method, expense_date, sortBy, sortOrder } = filterBody;
+
+    const filter: GraduationExpenseFilter = {
+      search: typeof search === "string" ? search : undefined,
+      method: typeof method === "string" ? method : undefined,
+      expense_date:
+        Array.isArray(expense_date) && expense_date.length === 2
+          ? [new Date(expense_date[0]), new Date(expense_date[1])]
+          : undefined,
+      sortBy: typeof sortBy === "string" ? sortBy : "expense_date",
+      sortOrder:
+        sortOrder === "asc" || sortOrder === "desc" ? sortOrder : "desc",
+    };
+
+    const expenses = await getGraduationExpensesService(graduationId, filter);
+    return success(res, expenses);
+  } catch (e: any) {
+    return error(res, `getGraduationExpenses endpoint: ${e.message}`, 500);
+  }
+}
+
+export async function updateGraduationExpenses(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    const expenseToUpdate = req.body;
+
+    const expenseUpdated: GraduationExpense =
+      await updateGraduationExpenseService(id, expenseToUpdate);
+
+    return success(res, expenseUpdated);
+  } catch (e: any) {
+    return error(res, `updateGraduationExpenses endpoint: ${e.message}`, 500);
+  }
+}
+
+export async function deleteGraduationExpense(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    await deleteGraduationExpenseService(id);
+
+    return success(res, true);
+  } catch (e: any) {
+    return error(res, `deleteGraduationExpense endpoint: ${e.message}`, 500);
   }
 }
