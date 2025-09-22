@@ -28,7 +28,7 @@ export const graduationExpenseSchema = z.object({
 });
 
 export const graduationPaymentFilterSchema = z.object({
-  student_id: z.string().uuid("Invalid student ID").optional(),
+  search: z.string().optional(),
   schoolGroup_id: z
     .number()
     .int()
@@ -51,4 +51,8 @@ export const graduationExpenseFilterSchema = z.object({
     .optional(),
   sortBy: z.string().optional(),
   sortOrder: z.enum(["asc", "desc"]).optional(),
+});
+
+export const uuidParamSchema = z.object({
+  id: z.string().uuid("Invalid ID format"),
 });

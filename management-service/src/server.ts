@@ -10,6 +10,7 @@ import { securityMiddleware } from "./middleware/security";
 import { loggerMiddleware } from "./middleware/logger";
 import { notFoundHandler } from "./middleware/notFound";
 import { errorHandler } from "./middleware/error";
+import graduationRouter from "./routes/graduation.routes";
 
 const app: Application = express();
 
@@ -23,6 +24,7 @@ app.get("/health", (_, res) =>
 app.use("/student", studentRouter);
 app.use("/teacher", teacherRouter);
 app.use("/coordinator", coordinatorRouter);
+app.use("/graduation", graduationRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
