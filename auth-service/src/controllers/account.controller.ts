@@ -7,27 +7,26 @@ import {
   registerUser,
 } from "../services/account.service";
 import pkg from "../../package.json";
+import { IUserRegisterRequest } from "../types/account.types";
 
 export async function register(req: Request, res: Response) {
   try {
-    const { email, password, telephone } = req.body;
+    const { name, lastName, email, password, telephone, schoolGroup_id } =
+      req.body;
     if (!email || !password)
       return error(res, "Email and password are required", 400);
 
-    const user = await registerUser(email, password, telephone);
-    return success(
-      res,
-      {
-        message: "User registered successfully",
-        user: {
-          id: user.id,
-          email: user.email,
-          telephone: user.telephone,
-          role_id: user.role_id,
-        },
-      },
-      201
-    );
+    const userToRegister: IUserRegisterRequest = {
+      name,
+      lastName,
+      email,
+      password,
+      telephone,
+      schoolGroup_id,
+    };
+
+    const user = await registerUser(userToRegister);
+    return success(res, user, 201);
   } catch (e: any) {
     return error(res, e.message, 400);
   }

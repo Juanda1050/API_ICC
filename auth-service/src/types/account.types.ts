@@ -1,4 +1,9 @@
-export interface User {
+interface IUserBase {
+  name: string;
+  lastName: string;
+}
+
+export interface IUser extends IUserBase {
   id: string;
   email: string;
   telephone?: string;
@@ -21,6 +26,13 @@ export interface Role {
   deleted_at?: string;
 }
 
-export interface UserWithRole extends Omit<User, "password_hash"> {
+export interface IUserRegisterRequest extends IUserBase {
+  email: string;
+  password: string;
+  telephone?: string;
+  schoolGroup_id?: number;
+}
+
+export interface UserWithRole extends Omit<IUser, "password_hash"> {
   role: Role;
 }

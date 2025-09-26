@@ -1,29 +1,39 @@
 import bcrypt from "bcrypt";
 import { supabase } from "../db";
 import jwt from "jsonwebtoken";
+import { IUser, IUserRegisterRequest } from "../types/account.types";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
+const ICC_ID = process.env.ICC_SCHOOL_ID;
 
 export async function registerUser(
-  email: string,
-  password: string,
-  telephone?: string
-) {
+  userRegistration: IUserRegisterRequest
+): Promise<IUser> {
   const { data: existingUser } = await supabase
     .from("users")
     .select("email, telephone")
-    .or(`email.eq.${email}${telephone ? `,telephone.eq.${telephone}` : ""}`);
+    .or(
+      `email.eq.${userRegistration.email}${
+        userRegistration.telephone
+          ? `,telephone.eq.${userRegistration.telephone}`
+          : ""
+      }`
+    );
 
   if (existingUser && existingUser.length > 0) {
-    const emailExists = existingUser.some((u) => u.email === email);
-    const phoneExists = existingUser.some((u) => u.telephone === telephone);
+    const emailExists = existingUser.some(
+      (u) => u.email === userRegistration.email
+    );
+    const phoneExists = existingUser.some(
+      (u) => u.telephone === userRegistration.telephone
+    );
 
     if (emailExists) throw new Error("A user with this email already exists");
     if (phoneExists)
       throw new Error("A user with this telephone already exists");
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(userRegistration.password, 10);
 
   const { data: defaultRole } = await supabase
     .from("roles")
@@ -37,9 +47,13 @@ export async function registerUser(
     .from("users")
     .insert([
       {
-        email,
+        name: userRegistration.name,
+        lastName: userRegistration.lastName,
+        email: userRegistration.email,
         password_hash: hashedPassword,
-        telephone,
+        telephone: userRegistration.telephone,
+        school_id: ICC_ID,
+        schoolGroup_id: userRegistration.schoolGroup_id,
         role_id: defaultRole.id,
         active: true,
       },
@@ -49,7 +63,7 @@ export async function registerUser(
 
   if (error) throw new Error(error.message);
 
-  return data;
+  return data as IUser;
 }
 
 export async function loginUser(email: string, password: string) {
@@ -85,6 +99,8 @@ export async function loginUser(email: string, password: string) {
     refreshToken,
     user: {
       id: user.id,
+      name: user.name,
+      lastName: user.lastName,
       email: user.email,
       telephone: user.telephone,
       role_id: user.role_id,
