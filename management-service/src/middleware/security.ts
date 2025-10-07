@@ -10,4 +10,5 @@ export const securityMiddleware = [
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
+  express.json({ limit: "10kb" }),
 ];

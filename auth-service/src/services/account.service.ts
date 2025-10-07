@@ -130,12 +130,16 @@ export async function refreshToken(oldRefreshToken: string) {
       { expiresIn: "6h" }
     );
 
+    const newRefreshToken = jwt.sign({ userId: user.id }, JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
     await supabase
       .from("users")
       .update({ token: newAccessToken })
       .eq("id", user.id);
 
-    return { accessToken: newAccessToken };
+    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
   } catch (err) {
     throw new Error("Invalid refresh token");
   }

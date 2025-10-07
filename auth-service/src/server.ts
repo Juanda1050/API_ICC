@@ -9,10 +9,12 @@ import { loggerMiddleware } from "./middleware/logger";
 import { notFoundHandler } from "./middleware/notFound";
 import { errorHandler } from "./middleware/error";
 import userRouter from "./routes/user.routes";
+import { simpleCookieMiddleware } from "./middleware/simpleCookie";
 
 const app: Application = express();
 
 app.use(securityMiddleware);
+app.use(simpleCookieMiddleware);
 app.use(loggerMiddleware);
 
 app.get("/health", (_, res) =>
