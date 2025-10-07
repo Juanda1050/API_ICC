@@ -1,5 +1,10 @@
 import { Request, Response } from "express";
-import { error, success } from "../utils/response";
+import {
+  clearRefreshCookie,
+  error,
+  success,
+  successWithRefreshCookie,
+} from "../utils/response";
 import {
   loginUser,
   logoutUser,
@@ -38,8 +43,16 @@ export async function login(req: Request, res: Response) {
     if (!email || !password)
       return error(res, "Email and password are required", 400);
 
-    const data = await loginUser(email, password);
-    return success(res, data);
+    const { accessToken, refreshToken, user } = await loginUser(
+      email,
+      password
+    );
+    return successWithRefreshCookie(
+      res,
+      { accessToken, user },
+      refreshToken,
+      200
+    );
   } catch (e: any) {
     return error(res, e.message, 400);
   }
@@ -47,11 +60,14 @@ export async function login(req: Request, res: Response) {
 
 export async function refresh(req: Request, res: Response) {
   try {
-    const { refreshToken: oldRefreshToken } = req.body;
-    if (!oldRefreshToken) return error(res, "Refresh token is required", 400);
+    const rt = req.cookies?.rt;
+    if (!rt) return error(res, "Refresh token is required", 401);
 
-    const data = await refreshToken(oldRefreshToken);
-    return success(res, data);
+    const { accessToken, refreshToken: newRt } = await refreshToken(rt);
+    if (newRt) {
+      return successWithRefreshCookie(res, { accessToken }, newRt, 200);
+    }
+    return success(res, { accessToken }, 200);
   } catch (e: any) {
     return error(res, e.message, 400);
   }
@@ -64,7 +80,7 @@ export async function logout(req: Request, res: Response) {
     if (!userId) return error(res, "Unauthorized", 401);
 
     await logoutUser(userId);
-    return success(res, { message: "Logged out successfully" });
+    return clearRefreshCookie(res, 200);
   } catch (e: any) {
     return error(res, e.message, 400);
   }
