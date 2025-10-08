@@ -7,13 +7,13 @@ export interface IUser extends IUserBase {
   id: string;
   email: string;
   telephone?: string;
-  password_hash: string;
+  password_hash?: string;
   token?: string;
   refresh_token?: string;
-  active: boolean;
+  active?: boolean;
   role_id: string;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
   deleted_at?: string;
 }
 

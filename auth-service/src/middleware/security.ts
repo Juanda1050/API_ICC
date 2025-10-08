@@ -8,7 +8,8 @@ export const securityMiddleware = [
     origin: process.env.CORS_ORIGIN,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-skip-auth-refresh"],
+    exposedHeaders: ["set-cookie"],
   }),
   express.json({ limit: "10kb" }),
 ];

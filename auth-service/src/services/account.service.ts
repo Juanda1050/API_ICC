@@ -2,11 +2,12 @@ import bcrypt from "bcrypt";
 import { supabase } from "../db";
 import jwt from "jsonwebtoken";
 import { IUser, IUserRegisterRequest } from "../types/account.types";
+import { email } from "zod";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 const ICC_ID = process.env.ICC_SCHOOL_ID;
 
-export async function registerUser(
+export async function registerService(
   userRegistration: IUserRegisterRequest
 ): Promise<IUser> {
   const { data: existingUser } = await supabase
@@ -66,7 +67,7 @@ export async function registerUser(
   return data as IUser;
 }
 
-export async function loginUser(email: string, password: string) {
+export async function loginService(email: string, password: string) {
   const { data: user, error } = await supabase
     .from("users")
     .select("*")
@@ -108,7 +109,7 @@ export async function loginUser(email: string, password: string) {
   };
 }
 
-export async function refreshToken(oldRefreshToken: string) {
+export async function refreshTokenService(oldRefreshToken: string) {
   try {
     const decoded = jwt.verify(oldRefreshToken, JWT_SECRET) as {
       id: string;
@@ -139,13 +140,25 @@ export async function refreshToken(oldRefreshToken: string) {
       .update({ token: newAccessToken })
       .eq("id", user.id);
 
-    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+    const currentUser: IUser = {
+      id: user.id,
+      name: user.name,
+      lastName: user.lastName,
+      email: user.email,
+      role_id: user.role_id,
+    };
+
+    return {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+      currentUser,
+    };
   } catch (err) {
     throw new Error("Invalid refresh token");
   }
 }
 
-export async function logoutUser(userId: string) {
+export async function logoutService(userId: string) {
   const { error } = await supabase
     .from("users")
     .update({ token: null, refresh_token: null })

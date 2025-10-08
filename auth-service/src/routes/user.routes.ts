@@ -1,5 +1,4 @@
 import { Router } from "express";
-import z from "zod/v3";
 import { authenticateMiddleware } from "../middleware/authenticate";
 import {
   deleteUserAccount,
@@ -8,21 +7,9 @@ import {
   userProfile,
 } from "../controllers/user.controller";
 import { validate } from "../middleware/validate";
+import { updatedUserSchema, toggleUserSchema } from "../schemas/user.schema";
 
 const userRouter = Router();
-
-const updatedUserSchema = z.object({
-  email: z.string().email("Invalid email address").optional(),
-  telephone: z.string().optional(),
-  password: z
-    .string()
-    .min(6, "Password must be at least 6 characters")
-    .optional(),
-});
-
-const toggleUserSchema = z.object({
-  active: z.boolean(),
-});
 
 userRouter.get("/profile", authenticateMiddleware, userProfile);
 userRouter.put(

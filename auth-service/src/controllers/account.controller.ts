@@ -6,10 +6,10 @@ import {
   successWithRefreshCookie,
 } from "../utils/response";
 import {
-  loginUser,
-  logoutUser,
-  refreshToken,
-  registerUser,
+  loginService,
+  logoutService,
+  refreshTokenService,
+  registerService,
 } from "../services/account.service";
 import pkg from "../../package.json";
 import { IUserRegisterRequest } from "../types/account.types";
@@ -31,7 +31,7 @@ export async function register(req: Request, res: Response) {
       schoolGroup_id,
     };
 
-    const user = await registerUser(userToRegister);
+    const user = await registerService(userToRegister);
     return success(res, user, 201);
   } catch (e: any) {
     return error(res, e.message, 400);
@@ -44,7 +44,7 @@ export async function login(req: Request, res: Response) {
     if (!email || !password)
       return error(res, "Email and password are required", 400);
 
-    const { accessToken, refreshToken, user } = await loginUser(
+    const { accessToken, refreshToken, user } = await loginService(
       email,
       password
     );
@@ -68,13 +68,16 @@ export async function refresh(req: Request, res: Response) {
   }
 
   try {
-    const { accessToken, refreshToken: newRefreshToken } = await refreshToken(
-      oldRefreshToken
-    );
+    const {
+      accessToken,
+      refreshToken: newRefreshToken,
+      currentUser,
+    } = await refreshTokenService(oldRefreshToken);
     return successWithRefreshCookie(
       res,
       {
         access_token: accessToken,
+        user: currentUser,
       },
       newRefreshToken
     );
@@ -89,7 +92,7 @@ export async function logout(req: Request, res: Response) {
 
     if (!userId) return error(res, "Unauthorized", 401);
 
-    await logoutUser(userId);
+    await logoutService(userId);
     return clearRefreshCookie(res, 200);
   } catch (e: any) {
     return error(res, e.message, 400);
