@@ -6,7 +6,7 @@ const REFRESH_COOKIE_NAME = "rt";
 const refreshCookieOptions = {
   httpOnly: true,
   secure: isProd,
-  sameSite: "lax" as const,
+  sameSite: isProd ? ("none" as const) : ("lax" as const),
   maxAge: 7 * 24 * 60 * 60 * 1000,
   path: "/auth",
 };
@@ -30,6 +30,11 @@ export function successWithRefreshCookie(
 }
 
 export function clearRefreshCookie(res: Response, status = 200) {
-  res.clearCookie(REFRESH_COOKIE_NAME, { path: refreshCookieOptions.path });
+  res.clearCookie(REFRESH_COOKIE_NAME, {
+    path: refreshCookieOptions.path,
+    httpOnly: true,
+    secure: refreshCookieOptions.secure,
+    sameSite: refreshCookieOptions.sameSite,
+  });
   return success(res, { cleared: true }, status);
 }

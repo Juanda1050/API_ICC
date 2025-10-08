@@ -13,6 +13,7 @@ import {
 } from "../services/account.service";
 import pkg from "../../package.json";
 import { IUserRegisterRequest } from "../types/account.types";
+import { parseCookieHeader } from "../utils/cookies";
 
 export async function register(req: Request, res: Response) {
   try {
@@ -59,17 +60,26 @@ export async function login(req: Request, res: Response) {
 }
 
 export async function refresh(req: Request, res: Response) {
-  try {
-    const rt = req.cookies?.rt;
-    if (!rt) return error(res, "Refresh token is required", 401);
+  const cookies = parseCookieHeader(req.headers.cookie);
+  const oldRefreshToken = cookies["rt"];
 
-    const { accessToken, refreshToken: newRt } = await refreshToken(rt);
-    if (newRt) {
-      return successWithRefreshCookie(res, { accessToken }, newRt, 200);
-    }
-    return success(res, { accessToken }, 200);
-  } catch (e: any) {
-    return error(res, e.message, 400);
+  if (!oldRefreshToken) {
+    return error(res, "No refresh token", 401);
+  }
+
+  try {
+    const { accessToken, refreshToken: newRefreshToken } = await refreshToken(
+      oldRefreshToken
+    );
+    return successWithRefreshCookie(
+      res,
+      {
+        access_token: accessToken,
+      },
+      newRefreshToken
+    );
+  } catch (err) {
+    return error(res, "Invalid refresh token", 401);
   }
 }
 
