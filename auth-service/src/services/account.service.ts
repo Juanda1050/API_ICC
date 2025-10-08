@@ -112,13 +112,16 @@ export async function loginService(email: string, password: string) {
 export async function refreshTokenService(oldRefreshToken: string) {
   try {
     const decoded = jwt.verify(oldRefreshToken, JWT_SECRET) as {
-      id: string;
+      userId: string;
     };
+    const userId = decoded.userId;
+
+    if (!userId) throw new Error("Invalid token payload");
 
     const { data: user, error } = await supabase
       .from("users")
       .select(`*, role:roles(*)`)
-      .eq("id", decoded.id)
+      .eq("id", userId)
       .eq("active", true)
       .is("deleted_at", null)
       .single();
@@ -143,7 +146,7 @@ export async function refreshTokenService(oldRefreshToken: string) {
     const currentUser: IUser = {
       id: user.id,
       name: user.name,
-      lastName: user.lastName,
+      lastName: user.last_name,
       email: user.email,
       role_id: user.role_id,
     };
