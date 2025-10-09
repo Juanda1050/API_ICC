@@ -101,7 +101,7 @@ export async function loginService(email: string, password: string) {
     user: {
       id: user.id,
       name: user.name,
-      lastName: user.lastName,
+      lastName: user.last_name,
       email: user.email,
       telephone: user.telephone,
       role_id: user.role_id,
