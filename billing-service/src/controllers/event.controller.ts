@@ -36,14 +36,7 @@ export async function getEvents(req: Request, res: Response) {
   try {
     const filterBody = req.body?.filter || {};
 
-    const {
-      place,
-      search,
-      sortBy,
-      sortOrder,
-      start_event_date,
-      end_event_date,
-    } = filterBody;
+    const { place, search, sortBy, sortOrder, event_dates } = filterBody;
 
     const filter: EventFilter = {
       place: typeof place === "string" ? place : undefined,
@@ -51,10 +44,10 @@ export async function getEvents(req: Request, res: Response) {
       sortBy: typeof sortBy === "string" ? sortBy : "event_date",
       sortOrder:
         sortOrder === "asc" || sortOrder === "desc" ? sortOrder : "asc",
-      start_event_date: start_event_date
-        ? new Date(start_event_date)
-        : undefined,
-      end_event_date: end_event_date ? new Date(end_event_date) : undefined,
+      event_dates:
+        Array.isArray(event_dates) && event_dates.length === 2
+          ? [new Date(event_dates[0]), new Date(event_dates[1])]
+          : undefined,
     };
 
     const eventList = await getEventsService(filter);

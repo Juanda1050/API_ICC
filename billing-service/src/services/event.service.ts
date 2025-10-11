@@ -51,13 +51,10 @@ export async function getEventsService(
   if (filter.place && filter.place.trim() !== "")
     query = query.eq("place", filter.place.trim());
 
-  if (filter.start_event_date) {
-    const startIso = filter.start_event_date.toISOString().slice(0, 10);
-    query = query.gte("event_date", startIso);
-  }
-  if (filter.end_event_date) {
-    const endIso = filter.end_event_date.toISOString().slice(0, 10);
-    query = query.lte("event_date", endIso);
+  if (filter?.event_dates && filter.event_dates.length === 2) {
+    const [start, end] = filter.event_dates;
+    query = query.gte("event_date", start.toISOString());
+    query = query.lte("event_date", end.toISOString());
   }
 
   const sortBy = ALLOWED_SORT_FIELDS_EVENTS.includes(filter.sortBy || "")

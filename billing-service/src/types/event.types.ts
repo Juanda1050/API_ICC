@@ -23,8 +23,7 @@ export interface Event {
 export interface EventFilter {
   search?: string;
   place?: string;
-  start_event_date?: Date;
-  end_event_date?: Date;
+  event_dates?: [Date, Date];
   sortBy?: string;
   sortOrder?: "asc" | "desc";
 }
