@@ -10,7 +10,6 @@ export const eventInputSchema = z.object({
         : undefined,
     z.date()
   ),
-  changed_by: z.string().min(1, "User is required"),
 });
 
 export const eventFilterSchema = z.object({

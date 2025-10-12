@@ -4,7 +4,6 @@ export interface EventInput {
   name: string;
   place: string;
   event_date: Date;
-  changed_by: string;
 }
 
 export interface Event {
