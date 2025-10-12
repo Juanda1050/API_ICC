@@ -1,6 +1,6 @@
 import z from "zod/v3";
 
-export const billingInputSchema = z.object({
+export const stockInputSchema = z.object({
   product_name: z.string().min(1, "Product name is required"),
   spent_in: z.number().min(1, "Spent amount must be at least 1"),
   sell_for: z.number().min(1, "Sell for amount must be at least 1"),

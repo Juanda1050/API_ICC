@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express, { Application } from "express";
-import billingRouter from "./routes/billing.routes";
+import stockRouter from "./routes/stock.routes";
 import eventRouter from "./routes/event.routes";
 import contributionRouter from "./routes/contribution.routes";
 import indivContributionRouter from "./routes/individualContribution.routes";
@@ -21,7 +21,7 @@ app.get("/health", (_, res) =>
   res.json({ ok: true, service: "Billing Service is healthy" })
 );
 
-app.use("/billing", billingRouter);
+app.use("/stock", stockRouter);
 app.use("/event", eventRouter);
 app.use("/contribution", contributionRouter);
 app.use("/indivContribution", indivContributionRouter);

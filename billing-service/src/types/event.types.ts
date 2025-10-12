@@ -1,4 +1,4 @@
-import { Billing } from "./billing.types";
+import { Stock } from "./stock.types";
 
 export interface EventInput {
   name: string;
@@ -17,7 +17,7 @@ export interface Event {
   event_date: Date;
   created_at: Date;
   created_by: string;
-  billings?: Billing[];
+  stocks?: Stock[];
 }
 
 export interface EventFilter {

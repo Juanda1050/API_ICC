@@ -25,16 +25,16 @@ export async function getEventByIdService(event_id: string): Promise<Event> {
   if (eventError) throw new Error(eventError.message);
   if (!event) throw new Error("Event not found");
 
-  const { data: billings, error: billingError } = await supabase
-    .from("billings")
+  const { data: stocks, error: stockError } = await supabase
+    .from("stock")
     .select("*")
     .eq("event_id", event_id);
 
-  if (billingError) throw new Error(billingError.message);
+  if (stockError) throw new Error(stockError.message);
 
   return {
     ...event,
-    billings: billings || [],
+    stocks: stocks || [],
   };
 }
 
@@ -86,13 +86,13 @@ export async function updateEventService(
 }
 
 export async function deleteEventService(event_id: string): Promise<void> {
-  const { error: billingError } = await supabase
-    .from("billings")
+  const { error: stockError } = await supabase
+    .from("stock")
     .delete()
     .eq("event_id", event_id);
 
-  if (billingError) {
-    throw new Error(`Error deleting billings: ${billingError.message}`);
+  if (stockError) {
+    throw new Error(`Error deleting stock: ${stockError.message}`);
   }
 
   const { error: eventError } = await supabase

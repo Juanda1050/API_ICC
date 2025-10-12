@@ -1,4 +1,4 @@
-export interface BillingInput {
+export interface StockInput {
   event_id: string;
   product_name: string;
   spent_in: number;
@@ -9,7 +9,7 @@ export interface BillingInput {
   changed_By: string;
 }
 
-export interface Billing {
+export interface Stock {
   id: string;
   event_id: string;
   product_name: string;
