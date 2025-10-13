@@ -19,6 +19,15 @@ export interface Event {
   stocks?: Stock[];
 }
 
+export interface EventMapped extends Event {
+  modified_by: string;
+}
+
+export type UserLite = {
+  name?: string | null;
+  last_name?: string | null;
+};
+
 export interface EventFilter {
   search?: string;
   place?: string;

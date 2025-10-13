@@ -1,5 +1,6 @@
 import { supabase } from "../db";
-import { Event, EventFilter, EventInput } from "../types/event.types";
+import { Event, EventFilter, EventInput, UserLite } from "../types/event.types";
+import { toISO } from "../utils/date";
 import { ALLOWED_SORT_FIELDS_EVENTS } from "../utils/dictionary";
 
 export async function createEventService(
@@ -41,20 +42,30 @@ export async function getEventByIdService(event_id: string): Promise<Event> {
 export async function getEventsService(
   filter: EventFilter = {}
 ): Promise<Event[]> {
-  let query = supabase.from("events").select("*");
+  let query = supabase
+    .from("events")
+    .select("*, users!events_created_by_fkey(name, last_name)");
 
   if (filter.search && filter.search.trim() !== "") {
     const q = `%${filter.search.trim()}%`;
     query = query.or(`name.ilike.${q},place.ilike.${q}`);
   }
 
-  if (filter.place && filter.place.trim() !== "")
-    query = query.eq("place", filter.place.trim());
+  if (filter.place && filter.place.trim() !== "") {
+    const p = `%${filter.place.trim()}%`;
+    query = query.ilike("place", p);
+  }
 
   if (filter?.event_dates && filter.event_dates.length === 2) {
-    const [start, end] = filter.event_dates;
-    query = query.gte("event_date", start.toISOString());
-    query = query.lte("event_date", end.toISOString());
+    let [start, end] = filter.event_dates;
+    const startISO = toISO(start);
+    const endISO = toISO(end);
+
+    const endInclusive = new Date(endISO);
+    endInclusive.setUTCHours(23, 59, 59, 999);
+    query = query
+      .gte("event_date", startISO)
+      .lte("event_date", endInclusive.toISOString());
   }
 
   const sortBy = ALLOWED_SORT_FIELDS_EVENTS.includes(filter.sortBy || "")
@@ -67,7 +78,18 @@ export async function getEventsService(
 
   if (error) throw new Error("Error al obtener eventos: " + error.message);
 
-  return (events || []) as Event[];
+  const eventsMapped = (events || []).map((e: any) => {
+    const user: UserLite = e.users || e.created_by || undefined;
+    const name = user?.name ?? "";
+    const lastName = user?.last_name ?? "";
+
+    return {
+      ...e,
+      modified_by: `${name} ${lastName}`,
+    };
+  });
+
+  return (eventsMapped || []) as Event[];
 }
 
 export async function updateEventService(

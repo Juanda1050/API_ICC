@@ -34,7 +34,7 @@ export async function createEvent(req: Request, res: Response) {
 
 export async function getEvents(req: Request, res: Response) {
   try {
-    const filterBody = req.body?.filter || {};
+    const filterBody = req.body || {};
 
     const { place, search, sortBy, sortOrder, event_dates } = filterBody;
 
