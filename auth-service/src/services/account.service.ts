@@ -49,7 +49,7 @@ export async function registerService(
     .insert([
       {
         name: userRegistration.name,
-        lastName: userRegistration.lastName,
+        last_name: userRegistration.lastName,
         email: userRegistration.email,
         password_hash: hashedPassword,
         telephone: userRegistration.telephone,
