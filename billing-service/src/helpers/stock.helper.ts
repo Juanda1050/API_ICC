@@ -28,7 +28,7 @@ export async function recalculateEventTotals(
     .update({
       spent: totalSpent,
       total_amount: totalSales,
-      profi: profit,
+      profit: profit,
       updated_by: userId,
       updated_at: new Date(),
     })

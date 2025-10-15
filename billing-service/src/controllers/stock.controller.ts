@@ -27,7 +27,7 @@ export async function createStock(req: Request, res: Response) {
 
     return success(res, stockCreated);
   } catch (e: any) {
-    return error(res, `createStock endpoint: `, 500);
+    return error(res, `createStock endpoint: ${e}`, 500);
   }
 }
 
@@ -39,7 +39,7 @@ export async function getEventStock(req: Request, res: Response) {
     const stockList = await getEventStockService(eventId);
     return success(res, stockList);
   } catch (e: any) {
-    return error(res, `getEventStock endpoint: `, 500);
+    return error(res, `getEventStock endpoint: ${e}`, 500);
   }
 }
 
@@ -63,7 +63,7 @@ export async function updateStock(req: Request, res: Response) {
 
     return success(res, stockUpdated);
   } catch (e: any) {
-    return error(res, `updateStock endpoint: `, 500);
+    return error(res, `updateStock endpoint: ${e}`, 500);
   }
 }
 
@@ -79,6 +79,6 @@ export async function deleteStock(req: Request, res: Response) {
 
     return success(res, true);
   } catch (e: any) {
-    return error(res, `deleteStock endpoint: `, 500);
+    return error(res, `deleteStock endpoint: ${e}`, 500);
   }
 }

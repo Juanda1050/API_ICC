@@ -6,6 +6,7 @@ import {
   createStock,
   deleteStock,
   getEventStock,
+  updateStock,
 } from "../controllers/stock.controller";
 import { stockInputSchema } from "../schemas/stock.schemas";
 import { validateBody } from "../middleware/validate";
@@ -28,7 +29,12 @@ stockRouter.post(
   createStock
 );
 stockRouter.get("/:eventId", ...adminAuth, getEventStock);
-stockRouter.put("/:id", ...adminAuth, validateBody(stockInputSchema.partial()));
+stockRouter.put(
+  "/:id",
+  ...adminAuth,
+  validateBody(stockInputSchema.partial()),
+  updateStock
+);
 stockRouter.delete("/:id", ...adminAuth, deleteStock);
 
 export default stockRouter;
