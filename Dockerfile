@@ -21,6 +21,11 @@ COPY gateway/ ./gateway/
 
 COPY ecosystem.config.js ./
 
+RUN cd auth-service && npm run build
+RUN cd billing-service && npm run build
+RUN cd management-service && npm run build
+RUN cd gateway && npm run build
+
 EXPOSE 8080
 
 CMD ["pm2-runtime", "start", "ecosystem.config.js"]
