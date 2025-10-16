@@ -18,7 +18,6 @@
             "node",
             "express",
             "jsonwebtoken",
-            "bcrypt",
             "cors",
             "morgan"
         ]
