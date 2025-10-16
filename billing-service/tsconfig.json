@@ -10,7 +10,10 @@
         "skipLibCheck": true,
         "resolveJsonModule": true,
         "outDir": "./dist",
-        "rootDir": "./src"
+        "rootDir": "./src",
+        "typeRoots": [
+            "./node_modules/@types"
+        ],
     },
     "include": [
         "src/**/*"
