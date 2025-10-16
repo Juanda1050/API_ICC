@@ -11,16 +11,6 @@
         "resolveJsonModule": true,
         "outDir": "./dist",
         "rootDir": "./src",
-        "typeRoots": [
-            "./node_modules/@types"
-        ],
-        "types": [
-            "node",
-            "express",
-            "jsonwebtoken",
-            "cors",
-            "morgan"
-        ]
     },
     "include": [
         "src/**/*"
