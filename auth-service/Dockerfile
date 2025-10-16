@@ -4,17 +4,21 @@ WORKDIR /usr/src/app
 RUN apk add --no-cache python3 make g++
 
 COPY package*.json ./
-RUN npm ci
+
+RUN npm install
 
 COPY . .
+
 RUN npm run build
 
-FROM node:22-alpine AS runner
+FROM node:22-alpine
 WORKDIR /usr/src/app
+
 ENV NODE_ENV=production
 
 COPY --from=builder /usr/src/app/package*.json ./
-COPY --from=builder /usr/src/app/node_modules ./node_modules
+RUN npm ci --only=production
+
 COPY --from=builder /usr/src/app/dist ./dist
 
 EXPOSE 4000
