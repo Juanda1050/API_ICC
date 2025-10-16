@@ -31,6 +31,7 @@ app.use(
   })
 );
 
-app.listen(process.env.GATEWAY_PORT, () => {
-  console.log(`API Gateway running on port ${process.env.GATEWAY_PORT}`);
+const port = Number(process.env.GATEWAY_PORT) || 8080;
+app.listen(port, '0.0.0.0', () => {
+  console.log(`API Gateway running on port ${port}`);
 });
