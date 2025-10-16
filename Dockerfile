@@ -19,10 +19,7 @@ COPY billing-service/ ./billing-service/
 COPY management-service/ ./management-service/
 COPY gateway/ ./gateway/
 
-RUN cd auth-service && npm run build
-RUN cd billing-service && npm run build
-RUN cd management-service && npm run build
-RUN cd gateway && npm run build
+COPY ecosystem.config.js ./
 
 EXPOSE 8080
 
