@@ -1,12 +1,17 @@
 import PDFDocument from "pdfkit";
 import { Response } from "express";
-import { Event, EventFilter } from "../types/event.types";
+import { IEvent, EventFilter } from "../types/event.types";
 import { getEventsService } from "./event.service";
 import { getEventStockService } from "./stock.service";
 import { Stock } from "../types/stock.types";
 import path from "path";
 import fs from "fs";
 import { pipeline } from "stream";
+import {
+  drawEventInfoBox,
+  drawHeader,
+  drawTotalsFooterRight,
+} from "../utils/pdf";
 
 const DEFAULT_HEADER_IMAGE_CANDIDATES = [
   path.resolve(process.cwd(), "assets", "icc.png"),
@@ -50,16 +55,14 @@ export async function exportEventToPDFService(
   res: Response
 ): Promise<void> {
   try {
-    const events: Event[] = await getEventsService({});
-    const event: Event | undefined = events.find((e) => e.id === eventId);
-
+    const events: IEvent[] = await getEventsService({});
+    const event = events.find((e) => e.id === eventId);
     if (!event) {
       res.status(404).json({ error: "Evento no encontrado" });
       return;
     }
 
     const stocks: Stock[] = await getEventStockService(eventId);
-
     const doc = new PDFDocument({ margin: 48, size: "A4" });
 
     res.setHeader("Content-Type", "application/pdf");
@@ -74,130 +77,28 @@ export async function exportEventToPDFService(
       } catch {}
     };
     res.on("close", onClose);
-
     pipeline(doc, res, (err) => {
       res.off("close", onClose);
       if (err) {
         console.error("PDF pipeline error:", err);
-        if (!res.headersSent) {
+        if (!res.headersSent)
           res.status(500).json({ error: "Error al generar PDF" });
-        } else {
+        else
           try {
             res.destroy(err);
           } catch {}
-        }
       }
     });
 
     const headerImage = await loadHeaderImageCached();
+    const headerGenerationDate = `Generado: ${new Date(
+      Date.now() - 6 * 60 * 60 * 1000
+    ).toLocaleString("es-MX")}`;
 
     const pageWidth = doc.page.width;
     const pageHeight = doc.page.height;
     const margin = doc.page.margins.left;
     const contentWidth = pageWidth - margin * 2;
-
-    const headerHeight = 80;
-    const headerTop = margin - 24;
-    const titleFontSize = 18;
-    doc.font("Helvetica-Bold").fontSize(titleFontSize).fillColor("#0b3b5c");
-    const titleY = headerTop + Math.max(0, (headerHeight - titleFontSize) / 2);
-
-    const drawHeader = () => {
-      doc.save();
-      doc
-        .fillColor("#f6f9fb")
-        .rect(margin - 8, margin - 24, contentWidth + 16, headerHeight)
-        .fill();
-      doc.fillColor("#000");
-
-      if (headerImage) {
-        try {
-          const logoMaxW = 120;
-          const logoMaxH = 60;
-          const logoY =
-            margin - 24 + Math.max(0, (headerHeight - logoMaxH) / 2);
-          const logoX = margin;
-          doc.image(headerImage, logoX, logoY, { fit: [logoMaxW, logoMaxH] });
-        } catch (e) {
-          console.warn("No se pudo dibujar la imagen en el header:", e);
-        }
-      }
-
-      doc.font("Helvetica-Bold").fontSize(18).fillColor("#0b3b5c");
-      doc.text(String(event.name || "Evento"), margin, titleY, {
-        width: contentWidth,
-        align: "center",
-      });
-
-      const rightBoxWidth = 160;
-      const rightBoxX = pageWidth - margin - rightBoxWidth;
-      const rightBoxY = margin - 8;
-
-      doc.font("Helvetica-Bold").fontSize(10).fillColor("#333");
-      doc.text("Primaria Mayor", rightBoxX, rightBoxY, {
-        width: rightBoxWidth,
-        align: "right",
-      });
-
-      doc
-        .strokeColor("#e0e6ea")
-        .lineWidth(1)
-        .moveTo(margin, margin + headerHeight - 8)
-        .lineTo(pageWidth - margin, margin + headerHeight - 8)
-        .stroke();
-
-      doc.restore();
-
-      doc.y = margin + headerHeight - 2;
-    };
-
-    const drawInfoBox = () => {
-      const infoBoxY = doc.y + 10;
-      const infoBoxH = 72;
-      doc.save();
-      doc
-        .fillColor("#eef6fb")
-        .rect(margin, infoBoxY, contentWidth, infoBoxH)
-        .fill();
-      doc.fillColor("#0b3b5c").rect(margin, infoBoxY, 10, infoBoxH).fill();
-      doc.fillColor("#000");
-
-      const innerLeft = margin + 16;
-      const leftColX = innerLeft;
-      const rightColX = margin + Math.round(contentWidth / 2) + 12;
-
-      doc
-        .font("Helvetica-Bold")
-        .fontSize(14)
-        .fillColor("#0b3b5c")
-        .text("Información General", leftColX, infoBoxY + 8);
-      doc.font("Helvetica").fontSize(11).fillColor("#333");
-
-      doc
-        .font("Helvetica-Bold")
-        .text("Escuela: ", leftColX, infoBoxY + 30, { continued: true });
-      doc.font("Helvetica").text(String(event.place));
-
-      doc
-        .font("Helvetica-Bold")
-        .text("Gasto Total: ", leftColX, infoBoxY + 48, { continued: true });
-      doc.font("Helvetica").text(`$${Number(event.spent).toFixed(2)}`);
-
-      doc
-        .font("Helvetica-Bold")
-        .text("Fecha: ", rightColX, infoBoxY + 30, { continued: true });
-      doc
-        .font("Helvetica")
-        .text(`${new Date(event.event_date).toLocaleDateString("es-MX")}`);
-
-      doc
-        .font("Helvetica-Bold")
-        .text("Ganancia: ", rightColX, infoBoxY + 48, { continued: true });
-      doc.font("Helvetica").text(`$${Number(event.profit).toFixed(2)}`);
-
-      doc.restore();
-      doc.y = infoBoxY + infoBoxH + 12;
-    };
 
     const tableWidth = Math.round(contentWidth * 0.98);
     const tableX = margin + Math.round((contentWidth - tableWidth) / 2);
@@ -303,74 +204,13 @@ export async function exportEventToPDFService(
       return nextY;
     };
 
-    const drawTotalsFooter = (
-      yTop: number,
-      totalSpent: number,
-      totalSales: number
-    ) => {
-      const boxW = Math.min(420, Math.round(contentWidth * 0.6));
-      const boxH = 65;
-      const boxX = pageWidth - margin - boxW;
-      const boxY = yTop + 18;
-
-      doc.save();
-
-      doc.fillColor("#f7fbf8");
-      doc.strokeColor("#e6f0ea").lineWidth(1);
-      doc.roundedRect(boxX, boxY, boxW, boxH, 6).fill().stroke();
-
-      const labelX = boxX + 12;
-      const valueWidth = boxW - 24;
-
-      doc
-        .font("Helvetica-Bold")
-        .fontSize(11)
-        .fillColor("#333")
-        .text("Total Gastado:", labelX, boxY + 10);
-      doc
-        .font("Helvetica")
-        .fontSize(11)
-        .fillColor("#0b3b5c")
-        .text(`$${totalSpent.toFixed(2)}`, labelX, boxY + 10, {
-          width: valueWidth,
-          align: "right",
-        });
-
-      doc
-        .font("Helvetica-Bold")
-        .fontSize(11)
-        .fillColor("#333")
-        .text("Total Ventas:", labelX, boxY + 28);
-      doc
-        .font("Helvetica")
-        .fontSize(11)
-        .fillColor("#0b3b5c")
-        .text(`$${totalSales.toFixed(2)}`, labelX, boxY + 28, {
-          width: valueWidth,
-          align: "right",
-        });
-
-      const net = totalSales - totalSpent;
-      const netColor = net >= 0 ? "#0b8a4f" : "#b20000";
-      doc
-        .font("Helvetica-Bold")
-        .fontSize(12)
-        .fillColor(netColor)
-        .text("Ganancia Neta:", labelX, boxY + 44);
-      doc
-        .font("Helvetica-Bold")
-        .fontSize(12)
-        .fillColor(netColor)
-        .text(`$${net.toFixed(2)}`, labelX, boxY + 44, {
-          width: valueWidth,
-          align: "right",
-        });
-
-      doc.restore();
-    };
-
-    drawHeader();
-    drawInfoBox();
+    drawHeader(doc, pageWidth, margin, contentWidth, {
+      title: event.name || "Evento",
+      headerImage,
+      rightTopText: headerGenerationDate,
+      rightBottomText: "Primaria Mayor",
+    });
+    drawEventInfoBox(doc, event, margin, contentWidth);
 
     doc.moveDown(0.4);
     doc.font("Helvetica-Bold").fontSize(14).fillColor("#0b3b5c");
@@ -399,7 +239,12 @@ export async function exportEventToPDFService(
       const spaceForTotals = 140;
       if (yCursor + estimatedRowHeight > pageHeight - margin - spaceForTotals) {
         doc.addPage();
-        drawHeader();
+        drawHeader(doc, pageWidth, margin, contentWidth, {
+          title: event.name || "Evento",
+          headerImage,
+          rightTopText: headerGenerationDate,
+          rightBottomText: "Primaria Mayor",
+        });
         doc.moveDown(0.5);
         yCursor = drawTableHeader(doc.y + 4);
       }
@@ -411,14 +256,21 @@ export async function exportEventToPDFService(
     const totalSpent = stocks.reduce((s, it) => s + Number(it.spent_in), 0);
     const totalSales = stocks.reduce((s, it) => s + Number(it.total_sales), 0);
 
-    if (yCursor > pageHeight - margin - 120) {
+    if (doc.y > pageHeight - margin - 120) {
       doc.addPage();
-      drawHeader();
-      yCursor = doc.y + 20;
+      drawHeader(doc, pageWidth, margin, contentWidth, {
+        title: event.name || "Evento",
+        headerImage,
+        rightTopText: headerGenerationDate,
+        rightBottomText: "Primaria Mayor",
+      });
     }
 
-    drawTotalsFooter(yCursor, totalSpent, totalSales);
-
+    drawTotalsFooterRight(doc, pageWidth, margin, contentWidth, {
+      totalSpent,
+      totalSales,
+      totalLabel: true,
+    });
     doc.end();
   } catch (error: unknown) {
     console.error("Error al generar PDF:", error);
@@ -439,10 +291,10 @@ export async function exportEventsListToPDFService(
   res: Response
 ): Promise<void> {
   try {
-    const events: Event[] = await getEventsService(filter);
+    const events: IEvent[] = await getEventsService(filter);
 
     const doc = new PDFDocument({
-      margin: 50,
+      margin: 48,
       size: "Letter",
       layout: "landscape",
     });
@@ -453,107 +305,217 @@ export async function exportEventsListToPDFService(
       `attachment; filename=misiones_${Date.now()}.pdf`
     );
 
-    doc.pipe(res);
-
-    doc
-      .fontSize(20)
-      .font("Helvetica-Bold")
-      .text("LISTADO DE EVENTOS", { align: "center" });
-    doc.moveDown();
-
-    if (filter.search || filter.place || filter.event_dates) {
-      doc.fontSize(10).font("Helvetica").text("Filtros aplicados:", {
-        underline: true,
-      });
-      if (filter.search) doc.text(`Búsqueda: ${filter.search}`);
-      if (filter.place) doc.text(`Lugar: ${filter.place}`);
-      if (filter.event_dates && filter.event_dates.length === 2) {
-        doc.text(
-          `Fechas: ${new Date(filter.event_dates[0]).toLocaleDateString(
-            "es-MX"
-          )} - ${new Date(filter.event_dates[1]).toLocaleDateString("es-MX")}`
-        );
-      }
-      doc.moveDown();
-    }
-
-    const tableTop: number = doc.y;
-    const colWidths = {
-      name: 150,
-      place: 120,
-      date: 80,
-      spent: 70,
-      profit: 70,
-      total: 70,
-      createdBy: 120,
+    const onClose = () => {
+      try {
+        (doc as any).destroy?.();
+      } catch {}
     };
+    res.on("close", onClose);
 
-    doc.fontSize(9).font("Helvetica-Bold");
-    doc.text("Nombre", 50, tableTop, { width: colWidths.name });
-    doc.text("Lugar", 200, tableTop, { width: colWidths.place });
-    doc.text("Fecha", 320, tableTop, { width: colWidths.date });
-    doc.text("Gasto", 400, tableTop, { width: colWidths.spent });
-    doc.text("Ganancia", 470, tableTop, { width: colWidths.profit });
-    doc.text("Total", 540, tableTop, { width: colWidths.total });
-    doc.text("Creado por", 610, tableTop, { width: colWidths.createdBy });
-
-    doc
-      .moveTo(50, tableTop + 15)
-      .lineTo(750, tableTop + 15)
-      .stroke();
-
-    let yPosition: number = tableTop + 25;
-
-    doc.font("Helvetica").fontSize(8);
-    events.forEach((event: Event) => {
-      if (yPosition > 500) {
-        doc.addPage();
-        yPosition = 50;
+    pipeline(doc, res, (err) => {
+      res.off("close", onClose);
+      if (err) {
+        console.error("PDF pipeline error:", err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: "Error al generar PDF" });
+        } else {
+          try {
+            res.destroy(err);
+          } catch {}
+        }
       }
-
-      doc.text(event.name, 50, yPosition, { width: colWidths.name });
-      doc.text(event.place, 200, yPosition, { width: colWidths.place });
-      doc.text(
-        new Date(event.event_date).toLocaleDateString("es-MX"),
-        320,
-        yPosition,
-        { width: colWidths.date }
-      );
-      doc.text(`$${event.spent.toFixed(2)}`, 400, yPosition, {
-        width: colWidths.spent,
-      });
-      doc.text(`$${event.profit.toFixed(2)}`, 470, yPosition, {
-        width: colWidths.profit,
-      });
-      doc.text(`$${event.total_amount}`, 540, yPosition, {
-        width: colWidths.total,
-      });
-      doc.text((event as any).modified_by || event.created_by, 610, yPosition, {
-        width: colWidths.createdBy,
-      });
-
-      yPosition += 20;
     });
 
-    doc.moveDown(2);
-    const totalSpent: number = events.reduce(
-      (sum: number, e: Event) => sum + e.spent,
-      0
-    );
-    const totalProfit: number = events.reduce(
-      (sum: number, e: Event) => sum + e.profit,
-      0
-    );
+    const headerImage = await loadHeaderImageCached();
+    const headerGenerationDate = `Generado: ${new Date(
+      Date.now() - 6 * 60 * 60 * 1000
+    ).toLocaleString("es-MX")}`;
 
-    doc.fontSize(12).font("Helvetica-Bold");
-    doc.text(`Total de Eventos: ${events.length}`);
-    doc.text(`Gasto Total: $${totalSpent.toFixed(2)}`);
-    doc.text(`Ganancia Total: $${totalProfit.toFixed(2)}`);
+    const pageWidth = doc.page.width;
+    const pageHeight = doc.page.height;
+    const margin = doc.page.margins.left;
+    const contentWidth = pageWidth - margin * 2;
+
+    const tableWidth = Math.round(contentWidth * 0.98);
+    const tableX = margin + Math.round((contentWidth - tableWidth) / 2);
+
+    const colWidths = {
+      name: Math.floor(tableWidth * 0.24),
+      place: Math.floor(tableWidth * 0.18),
+      date: Math.floor(tableWidth * 0.12),
+      spent: Math.floor(tableWidth * 0.1),
+      profit: Math.floor(tableWidth * 0.1),
+      total: 0,
+    };
+
+    const used =
+      colWidths.name +
+      colWidths.place +
+      colWidths.date +
+      colWidths.spent +
+      colWidths.profit;
+    colWidths.total = tableWidth - used;
+    if (colWidths.total < 0) colWidths.total = 0;
+
+    const colXPositions = (() => {
+      const xs: number[] = [];
+      let x = tableX;
+      xs.push(x);
+      x += colWidths.name;
+      xs.push(x);
+      x += colWidths.place;
+      xs.push(x);
+      x += colWidths.date;
+      xs.push(x);
+      x += colWidths.spent;
+      xs.push(x);
+      x += colWidths.profit;
+      xs.push(x);
+      return xs;
+    })();
+
+    const headerRowH = 22;
+    const rowPad = 5;
+
+    const drawTableHeader = (yTop: number) => {
+      doc.save();
+      doc.rect(tableX, yTop, tableWidth, headerRowH).fill("#0b3b5c");
+      doc.fillColor("#fff").font("Helvetica-Bold").fontSize(9);
+      doc.text("Nombre", colXPositions[0] + rowPad, yTop + 6, {
+        width: colWidths.name - rowPad * 2,
+        align: "left",
+      });
+      doc.text("Escuela", colXPositions[1] + 2, yTop + 6, {
+        width: colWidths.place - rowPad,
+        align: "left",
+      });
+      doc.text("Fecha", colXPositions[2], yTop + 6, {
+        width: colWidths.date - rowPad,
+        align: "center",
+      });
+      doc.text("Gasto", colXPositions[3], yTop + 6, {
+        width: colWidths.spent - rowPad,
+        align: "center",
+      });
+      doc.text("Ganancia", colXPositions[4], yTop + 6, {
+        width: colWidths.profit - rowPad,
+        align: "right",
+      });
+      doc.text("Ventas Totales", colXPositions[5], yTop + 6, {
+        width: colWidths.total - rowPad,
+        align: "right",
+      });
+      doc.restore();
+      return yTop + headerRowH + 6;
+    };
+
+    const drawTableRow = (yTop: number, ev: IEvent, isAlt: boolean) => {
+      if (isAlt) {
+        doc.save();
+        doc.rect(tableX, yTop - 2, tableWidth, 20).fill("#fbfcfd");
+        doc.restore();
+      }
+
+      const fmt = (n?: number) =>
+        typeof n === "number" ? `$${n.toFixed(2)}` : "—";
+      doc.font("Helvetica").fontSize(11).fillColor("#000");
+
+      doc.text(ev.name || "—", colXPositions[0] + rowPad, yTop, {
+        width: colWidths.name - rowPad * 2,
+        align: "left",
+      });
+      doc.text(ev.place || "—", colXPositions[1] + 2, yTop, {
+        width: colWidths.place - rowPad,
+        align: "left",
+      });
+      doc.text(
+        new Date(ev.event_date).toLocaleDateString("es-MX"),
+        colXPositions[2],
+        yTop,
+        { width: colWidths.date - rowPad, align: "center" }
+      );
+      doc.text(fmt(ev.spent), colXPositions[3], yTop, {
+        width: colWidths.spent - rowPad,
+        align: "center",
+      });
+      doc.text(fmt(ev.profit), colXPositions[4], yTop, {
+        width: colWidths.profit - rowPad,
+        align: "right",
+      });
+      doc.text(fmt(ev.total_amount), colXPositions[5], yTop, {
+        width: colWidths.total - rowPad,
+        align: "right",
+      });
+
+      return yTop + 20;
+    };
+
+    drawHeader(doc, pageWidth, margin, contentWidth, {
+      title: "LISTADO DE EVENTOS",
+      headerImage,
+      rightTopText: headerGenerationDate,
+      rightBottomText: "Primaria Mayor",
+    });
+    doc.moveDown(0.2);
+
+    doc.font("Helvetica-Bold").fontSize(13).fillColor("#0b3b5c");
+    doc.text("Eventos", tableX, doc.y, { width: tableWidth, align: "center" });
+    doc.moveDown(0.4);
+
+    let yCursor = drawTableHeader(doc.y + 4);
+    let rowIndex = 0;
+    for (const ev of events) {
+      const estimatedHeight = 20;
+      const footerReserve = 120;
+      if (yCursor + estimatedHeight > pageHeight - margin - footerReserve) {
+        doc.addPage();
+        drawHeader(doc, pageWidth, margin, contentWidth, {
+          title: "LISTADO DE EVENTOS",
+          headerImage,
+          rightTopText: headerGenerationDate,
+          rightBottomText: "Primaria Mayor",
+        });
+        doc.moveDown(0.5);
+        yCursor = drawTableHeader(doc.y + 4);
+      }
+
+      yCursor = drawTableRow(yCursor, ev, rowIndex % 2 === 0);
+      rowIndex++;
+    }
+
+    const totalSpent = events.reduce((s, e) => s + (Number(e.spent) || 0), 0);
+    const totalProfit = events.reduce((s, e) => s + (Number(e.profit) || 0), 0);
+    const totalEvents = events.length;
+
+    if (yCursor > pageHeight - margin - 120) {
+      doc.addPage();
+      drawHeader(doc, pageWidth, margin, contentWidth, {
+        title: "LISTADO DE EVENTOS",
+        headerImage,
+        rightTopText: headerGenerationDate,
+        rightBottomText: "Primaria Mayor",
+      });
+      yCursor = doc.y + 20;
+    }
+
+    drawTotalsFooterRight(doc, pageWidth, margin, contentWidth, {
+      totalEvents,
+      totalSpent,
+      totalSales: totalProfit,
+      totalLabel: false,
+    });
 
     doc.end();
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Error desconocido";
-    throw new Error("Error al generar PDF: " + errorMessage);
+    console.error("Error al generar PDF listado:", error);
+    if (!res.headersSent) {
+      const message =
+        error instanceof Error ? error.message : "Error desconocido";
+      res.status(500).json({ error: "Error al generar PDF: " + message });
+    } else {
+      try {
+        res.destroy(error as any);
+      } catch {}
+    }
   }
 }
