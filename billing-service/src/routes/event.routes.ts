@@ -6,6 +6,8 @@ import { eventFilterSchema, eventInputSchema } from "../schemas/event.schemas";
 import {
   createEvent,
   deleteEvent,
+  exportEventPDF,
+  exportEventsListPDF,
   getEventById,
   getEvents,
   updateEvent,
@@ -23,6 +25,8 @@ const adminAuth = [
   ]),
 ];
 
+eventRouter.get("/export/:id", ...adminAuth, exportEventPDF)
+eventRouter.get("/export", ...adminAuth, exportEventsListPDF)
 eventRouter.get("/:id", ...adminAuth, getEventById);
 eventRouter.post(
   "/getAll",

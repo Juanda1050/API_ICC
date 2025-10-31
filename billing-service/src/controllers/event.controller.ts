@@ -8,6 +8,10 @@ import {
   getEventsService,
   updateEventService,
 } from "../services/event.service";
+import {
+  exportEventsListToPDFService,
+  exportEventToPDFService,
+} from "../services/pdf.service";
 
 export async function createEvent(req: Request, res: Response) {
   try {
@@ -102,5 +106,38 @@ export async function deleteEvent(req: Request, res: Response) {
     return success(res, true);
   } catch (e: any) {
     return error(res, `getEventById endpoint: ${e.message}`, 500);
+  }
+}
+
+export async function exportEventPDF(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    await exportEventToPDFService(id, res);
+  } catch (e: any) {
+    return error(res, `exportEventPDF endpoint: ${e.message}`, 500);
+  }
+}
+
+export async function exportEventsListPDF(req: Request, res: Response) {
+  try {
+    const filterBody = req.body || {};
+
+    const { place, search, sortBy, sortOrder, event_dates } = filterBody;
+
+    const filter: EventFilter = {
+      place: typeof place === "string" ? place : undefined,
+      search: typeof search === "string" ? search : undefined,
+      sortBy: typeof sortBy === "string" ? sortBy : "event_date",
+      sortOrder:
+        sortOrder === "asc" || sortOrder === "desc" ? sortOrder : "asc",
+      event_dates:
+        Array.isArray(event_dates) && event_dates.length === 2
+          ? [new Date(event_dates[0]), new Date(event_dates[1])]
+          : undefined,
+    };
+
+    await exportEventsListToPDFService(filter, res);
+  } catch (e: any) {
+    return error(res, `exportEventsListPDF endpoint: ${e.message}`, 500);
   }
 }
