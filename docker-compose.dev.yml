@@ -38,7 +38,7 @@ services:
     volumes:
       - ./auth-service:/usr/src/app
       - auth_node_modules:/usr/src/app/node_modules
-    command: npm run dev
+    command: sh -c "npm install && npm run dev"
 
   billing-service:
     build:
@@ -54,7 +54,7 @@ services:
     volumes:
       - ./billing-service:/usr/src/app
       - billing_node_modules:/usr/src/app/node_modules
-    command: npm run dev
+    command: sh -c "npm install && npm run dev"
 
   management-service:
     build:
@@ -70,7 +70,7 @@ services:
     volumes:
       - ./management-service:/usr/src/app
       - management_node_modules:/usr/src/app/node_modules
-    command: npm run dev
+    command: sh -c "npm install && npm run dev"
 
 volumes:
   gateway_node_modules:

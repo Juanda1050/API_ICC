@@ -1,11 +1,11 @@
 import { supabase } from "../db";
-import { Event, EventFilter, EventInput, UserLite } from "../types/event.types";
+import { IEvent, EventFilter, EventInput, UserLite } from "../types/event.types";
 import { toISO } from "../utils/date";
 import { ALLOWED_SORT_FIELDS_EVENTS } from "../utils/dictionary";
 
 export async function createEventService(
   eventInput: EventInput
-): Promise<Event> {
+): Promise<IEvent> {
   const { data: event, error } = await supabase
     .from("events")
     .insert(eventInput)
@@ -16,7 +16,7 @@ export async function createEventService(
   return event;
 }
 
-export async function getEventByIdService(event_id: string): Promise<Event> {
+export async function getEventByIdService(event_id: string): Promise<IEvent> {
   const { data: event, error: eventError } = await supabase
     .from("events")
     .select("*")
@@ -41,7 +41,7 @@ export async function getEventByIdService(event_id: string): Promise<Event> {
 
 export async function getEventsService(
   filter: EventFilter = {}
-): Promise<Event[]> {
+): Promise<IEvent[]> {
   let query = supabase
     .from("events")
     .select("*, users!events_created_by_fkey(name, last_name)");
@@ -89,13 +89,13 @@ export async function getEventsService(
     };
   });
 
-  return (eventsMapped || []) as Event[];
+  return (eventsMapped || []) as IEvent[];
 }
 
 export async function updateEventService(
   event_id: string,
   updates: Partial<EventInput>
-): Promise<Event> {
+): Promise<IEvent> {
   const { data: event, error } = await supabase
     .from("events")
     .update(updates)

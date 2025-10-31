@@ -6,20 +6,20 @@ export interface EventInput {
   event_date: Date;
 }
 
-export interface Event {
+export interface IEvent {
   id: string;
   name: string;
   place: string;
   spent: number;
   profit: number;
-  total_amount: string;
+  total_amount: number;
   event_date: Date;
   created_at: Date;
   created_by: string;
   stocks?: Stock[];
 }
 
-export interface EventMapped extends Event {
+export interface EventMapped extends IEvent {
   modified_by: string;
 }
 
@@ -35,3 +35,11 @@ export interface EventFilter {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
 }
+
+export type HeaderOptions = {
+  title: string;
+  rightTopText?: string;
+  rightBottomText?: string;
+  headerImage?: Buffer;
+  headerHeight?: number;
+};
